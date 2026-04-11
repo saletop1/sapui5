@@ -1,17 +1,14 @@
-FROM nginx:alpine
+FROM node:20-alpine
 
-# 1. Hapus total isi folder dan config default
-RUN rm -rf /usr/share/nginx/html/*
-RUN rm /etc/nginx/conf.d/default.conf
+WORKDIR /app
 
-# 2. Copy file project (folder public)
-COPY public/ /usr/share/nginx/html/
+# Copy package files untuk install dependency
+COPY package*.json ./
+RUN npm install
 
-# 3. Copy config nginx yang baru kita buat tadi
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+# Copy seluruh kodingan
+COPY . .
 
-# 4. Beri izin
-RUN chmod -R 755 /usr/share/nginx/html
-
-EXPOSE 80
-CMD ["nginx", "-g", "daemon off;"]
+# Jalankan server.js
+EXPOSE 3000
+CMD ["node", "server.js"]
