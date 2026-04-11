@@ -1,0 +1,151 @@
+<mvc:View
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    controllerName="so.app.controller.Main"
+    displayBlock="true">
+
+    <Page enableScrolling="true" showHeader="false">
+        <customHeader>
+            <Bar>
+                <contentLeft>
+                    <Title text="📊 Sales Dashboard" level="H5"/>
+                    <Text text="Outstanding Orders" class="sapUiTinyMarginBegin"/>
+                </contentLeft>
+                <contentRight>
+                    <Text id="clockText" text="–"/>
+                    <Button text="LIVE" enabled="false" type="Accept"/>
+                </contentRight>
+            </Bar>
+        </customHeader>
+        <content>
+            <VBox class="sapUiSmallMargin">
+                <!-- KPI Cards via HTML -->
+                <core:HTML id="kpiRow" content="&lt;div class='kpiRow'&gt;&lt;/div&gt;"/>
+
+                <!-- Two columns: Top Customer and Aging Analysis -->
+                <HBox class="sapUiSmallMarginBottom" justifyContent="SpaceBetween">
+                    <VBox class="sapUiSmallMarginEnd" width="49%">
+                        <Panel>
+                            <headerToolbar>
+                                <Toolbar>
+                                    <Title text="🏆 Top Customer by Value" level="H5"/>
+                                    <ToolbarSpacer/>
+                                    <RadioButtonGroup id="sourceGroup" columns="2" select="onSourceChange">
+                                        <RadioButton id="rbSemarang" text="Semarang" selected="true"/>
+                                        <RadioButton id="rbSurabaya" text="Surabaya"/>
+                                    </RadioButtonGroup>
+                                </Toolbar>
+                            </headerToolbar>
+                            <ScrollContainer id="custScrollContainer" height="320px" vertical="true" horizontal="false" width="100%">
+                                <core:HTML id="custTableHtml"/>
+                            </ScrollContainer>
+                        </Panel>
+                    </VBox>
+                    <VBox width="49%">
+                        <Panel>
+                            <headerToolbar>
+                                <Toolbar>
+                                    <Title text="⏳ Aging Analysis per Customer" level="H5"/>
+                                    <ToolbarSpacer/>
+                                    <Text text="Stacked by Days Running" class="sapUiTinyMarginEnd"/>
+                                </Toolbar>
+                            </headerToolbar>
+                            <ScrollContainer height="320px" vertical="true" horizontal="false" width="100%">
+                                <core:HTML id="agingAnalysisHtml" content="&lt;div&gt;Loading...&lt;/div&gt;"/>
+                            </ScrollContainer>
+                        </Panel>
+                    </VBox>
+                </HBox>
+
+                <!-- Detail SO Panel -->
+                <Panel>
+                    <headerToolbar>
+                        <Toolbar>
+                            <core:HTML id="selectedBadge" content="&lt;span&gt;&lt;/span&gt;"/>
+                            <Label text="Status:" labelFor="statusFilter" class="sapUiSmallMarginBegin"/>
+                            <ComboBox id="statusFilter" selectedKey="" width="120px" selectionChange="onStatusFilterChange" class="sapUiTinyMarginEnd">
+                                <items>
+                                    <core:ListItem key="" text="All Status"/>
+                                    <core:ListItem key="Pending" text="Pending"/>
+                                    <core:ListItem key="Low" text="Low"/>
+                                    <core:ListItem key="Medium" text="Medium"/>
+                                    <core:ListItem key="Warning" text="Warning"/>
+                                    <core:ListItem key="Prioritas" text="Prioritas"/>
+                                    <core:ListItem key="None" text="None"/>
+                                </items>
+                            </ComboBox>
+                            <ToolbarSpacer/>
+                            <SearchField id="searchField" width="220px" liveChange="onSearch" placeholder="Search SO, customer, material..."/>
+                            <Text id="rowCount" text="–" class="sapUiSmallMarginBegin"/>
+                            <Button icon="sap-icon://excel-attachment" text="Excel" type="Default" press="onExportExcel" class="sapUiSmallMarginBegin"/>
+                            <Button icon="sap-icon://pdf-attachment" text="PDF" type="Default" press="onExportPdf" class="sapUiTinyMarginBegin"/>
+                        </Toolbar>
+                    </headerToolbar>
+                    <ScrollContainer id="soScrollContainer" class="soScrollContainer" height="500px" vertical="true" horizontal="false" width="100%">
+                        <Table id="soTable" items="{/results}" noDataText="Click a customer above or adjust filters to see SO details" alternateRowColors="true" growing="true" growingThreshold="50">
+                            <!-- columns dan items sama seperti sebelumnya -->
+                            <columns>
+                                <Column width="160px"><Text text="Sales Order"/></Column>
+                                <Column width="110px" hAlign="Center"><Text text="Created Date"/></Column>
+                                <Column width="250px"><Text text="Material"/></Column>
+                                <Column width="100px" hAlign="Center"><Text text="Qty Order"/></Column>
+                                <Column width="100px" hAlign="Center"><Text text="Shipped"/></Column>
+                                <Column width="120px" hAlign="Center"><Text text="Qty Outstanding"/></Column>
+                                <Column width="100px" hAlign="Center"><Text text="WHFG"/></Column>
+                                <Column width="100px" hAlign="Center"><Text text="Packing"/></Column>
+                                <Column width="120px" hAlign="Center"><Text text="Total Value"/></Column>
+                                <Column width="110px" hAlign="Center"><Text text="Req. Delivery"/></Column>
+                                <Column width="130px" hAlign="Center"><Text text="Days Running"/></Column>
+                                <Column width="100px" hAlign="Center"><Text text="Status"/></Column>
+                            </columns>
+                            <items>
+                                <ColumnListItem>
+                                    <cells>
+                                        <core:HTML content="{parts: [{path: 'bstnk'}, {path: 'id'}, {path: 'showCustomerBelow'}, {path: 'customer'}], formatter: '.formatSalesOrderWithBstnk'}"/>
+                                        <Text text="{orderDateFmt}" wrapping="false" textAlign="Center"/>
+                                        <core:HTML content="{parts: [{path: 'matnr'}, {path: 'item'}], formatter: '.formatMaterial'}"/>
+                                        <Text text="{kwmengFmt}" wrapping="false" textAlign="Center"/>
+                                        <Text text="{qtyGiFmt}" wrapping="false" textAlign="Center"/>
+                                        <Text text="{qtyBalance2Fmt}" wrapping="false" textAlign="Center"/>
+                                        <Text text="{kalabFmt}" wrapping="false" textAlign="Center"/>
+                                        <Text text="{kalab2Fmt}" wrapping="false" textAlign="Center"/>
+                                        <Text text="{totalFmt}" wrapping="false" class="priceCell" textAlign="Center"/>
+                                        <Text text="{deliveryDateFmt}" wrapping="false" textAlign="Center"/>
+                                        <Text text="{hariBerjalan}" wrapping="false" textAlign="Center"/>
+                                        <core:HTML content="{path: 'status', formatter: '.formatStatus'}"/>
+                                    </cells>
+                                </ColumnListItem>
+                            </items>
+                        </Table>
+                    </ScrollContainer>
+                </Panel>
+            </VBox>
+        </content>
+        <footer>
+            <Bar>
+                <contentMiddle><Text id="footerInfo" text="Sales Dashboard · Werks 3000 · Auart ZOR2"/></contentMiddle>
+                <contentRight><Text id="updateTime" text="–"/></contentRight>
+            </Bar>
+        </footer>
+    </Page>
+
+    <!-- Dialog Agent -->
+    <Dialog id="dlgAgent" title="🤖 AI Sales Agent" contentWidth="450px">
+        <content>
+            <VBox class="sapUiSmallMargin">
+                <Text text="Ask me anything, for example:"/>
+                <Text text="• Show SO for ETHAN ALLEN OPERATIONS, INC."/>
+                <Text text="• What is the total outstanding value?"/>
+                <Text text="• Warning status SO this week"/>
+                <TextArea id="agentInput" rows="4" width="100%" placeholder="Type your question..."/>
+            </VBox>
+        </content>
+        <beginButton>
+            <Button text="Cancel" press="onAgentClose"/>
+        </beginButton>
+        <endButton>
+            <Button text="Send" type="Emphasized" press=".onAgentProcess"/>
+        </endButton>
+    </Dialog>
+</mvc:View>

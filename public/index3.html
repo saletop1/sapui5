@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sales Order Dashboard</title>
+
+    <!-- Library dari public/libs -->
+    <script src="/libs/xlsx.full.min.js"></script>
+    <script src="/libs/jspdf.umd.min.js"></script>
+    <script src="/libs/jspdf.plugin.autotable.min.js"></script>
+
+    <script>
+        if (typeof XLSX !== "undefined" && !window.XLSX) window.XLSX = XLSX;
+        if (window.jspdf && window.jspdf.jsPDF) window.jsPDF = window.jspdf.jsPDF;
+        else if (typeof jsPDF !== "undefined") window.jsPDF = jsPDF;
+    </script>
+
+    <!-- SAP UI5 -->
+    <script
+        id="sap-ui-bootstrap"
+        src="https://sapui5.hana.ondemand.com/1.120.2/resources/sap-ui-core.js"
+        data-sap-ui-theme="sap_fiori_3"
+        data-sap-ui-libs="sap.m"
+        data-sap-ui-bindingSyntax="complex"
+        data-sap-ui-compatVersion="edge"
+        data-sap-ui-async="true"
+        data-sap-ui-resourceroots='{"so.app": "./"}'
+    ></script>
+
+    <link rel="stylesheet" href="style.css">
+    <style>
+        html, body, #content { height: 100%; margin: 0; padding: 0; width: 100%; }
+    </style>
+    <script>
+        sap.ui.getCore().attachInit(function () {
+            var oView = sap.ui.xmlview({ viewName: "so.app.view.Main", id: "mainView" });
+            oView.placeAt("content");
+        });
+    </script>
+</head>
+<body class="sapUiBody" id="content"></body>
+</html>

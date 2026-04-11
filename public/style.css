@@ -1,0 +1,254 @@
+/* RESET & GLOBAL */
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    width: 100%;
+    overflow: auto;
+    background: #f0f2f5;
+}
+#content, .sapUiBody, .sapUiView {
+    height: 100%;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    display: block;
+}
+
+/* KPI CARDS */
+.kpiRow {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 16px;
+}
+.kpiCard {
+    flex: 1;
+    min-width: 130px;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+    padding: 10px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    box-sizing: border-box;
+    transition: all 0.2s ease;
+}
+.kpiCard:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+.kpiCardIcon  { font-size: 22px; line-height: 1; margin-bottom: 4px; }
+.kpiCardLabel { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: #6b7280; line-height: 1.2; }
+.kpiCardValue { font-size: 20px; font-weight: 700; color: #28a745; line-height: 1.15; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* Aging Analysis Styles */
+.aging-card {
+    background: white;
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 12px;
+    transition: all 0.2s;
+    border: 1px solid #f0f0f0;
+}
+.aging-card:hover {
+    background: #f9fafb;
+    border-color: #e5e7eb;
+}
+.aging-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+}
+.aging-title {
+    font-weight: 600;
+    color: #374151;
+    font-size: 13px;
+}
+.aging-value {
+    font-weight: bold;
+    color: #111827;
+    font-size: 13px;
+}
+.aging-stats {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: #6b7280;
+    margin-top: 4px;
+}
+.progress-bar {
+    width: 100%;
+    background-color: #e5e7eb;
+    border-radius: 999px;
+    height: 6px;
+    margin-top: 8px;
+    overflow: hidden;
+}
+.progress-fill {
+    height: 100%;
+    border-radius: 999px;
+}
+.fill-emerald { background-color: #10b981; }
+.fill-yellow { background-color: #eab308; }
+.fill-orange { background-color: #f97316; }
+.fill-red { background-color: #ef4444; }
+.fill-darkred { background-color: #b91c1c; }
+
+/* CUSTOMER TABLE */
+.custTableContainer {
+    border-radius: 8px;
+    width: 100%;
+}
+.custTable {
+    width: 100%;
+    border-collapse: collapse;
+}
+.custTable th {
+    padding: 8px 10px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: #6b7280;
+    border-bottom: 1px solid #e5e7eb;
+    text-align: left;
+    background: #fafbfc;
+}
+.custTable td {
+    padding: 8px 10px;
+    font-size: 12px;
+    border-bottom: 1px solid #f3f4f6;
+}
+.custTable tbody tr {
+    cursor: pointer;
+}
+.custTable tbody tr:hover {
+    background: #f9fafb;
+}
+.custTable .active-row {
+    background: #fff7ed;
+}
+
+/* DETAIL TABLE */
+.sapMTableRowCell {
+    font-size: 13px !important;
+    padding: 7px 8px !important;
+}
+.sapMColumnHeaderText {
+    font-size: 12px !important;
+    font-weight: 600;
+    background: #f8f9fa;
+    padding: 8px;
+}
+.priceCell {
+    font-weight: 600;
+    color: #28a745 !important;
+}
+
+/* Status badge */
+.statusCell {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 16px;
+    font-size: 11px;
+    font-weight: 600;
+    text-align: center;
+    min-width: 70px;
+    background: #f3f4f6;
+    color: #1f2937;
+}
+.statusPending { color: #6b7280; }
+.statusLow { color: #0284c7; }
+.statusMedium { color: #ca8a04; }
+.statusWarning { color: #d97706; }
+.statusPrioritas { color: #dc2626; }
+.statusNone { color: #9ca3af; }
+
+/* MATERIAL CELL */
+.materialCode { font-size: 11px !important; color: #6c757d; font-family: monospace; }
+.materialDesc { font-size: 13px !important; font-weight: 600; color: #212529; }
+
+/* FOOTER */
+.footerText    { font-size: 10px; color: #adb5bd; }
+.clockText     { font-size: 12px; color: #6c757d; }
+.rowCountText  { font-size: 11px; color: #6c757d; white-space: nowrap; }
+
+/* SCROLL CONTAINERS */
+.soScrollContainer {
+    height: 500px !important;
+    overflow-y: auto !important;
+    overflow-x: auto !important;
+    display: block;
+    width: 100%;
+}
+#custScrollContainer {
+    overflow-y: auto !important;
+}
+
+/* Tombol "More" pada tabel growing */
+.sapMTableGrowing {
+    background: #f8f9fa;
+    padding: 8px;
+    text-align: center;
+    border-top: 1px solid #e5e7eb;
+}
+.sapMTableGrowing button {
+    background-color: #28a745;
+    color: white;
+    border: none;
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 12px;
+    cursor: pointer;
+}
+.sapMTableGrowing button:hover {
+    background-color: #218838;
+}
+
+/* AGENT FLOATING BUTTON */
+.agentFloatingBtn {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1000;
+    border-radius: 50px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+    .kpiCard {
+        min-width: 100px;
+        padding: 8px 10px;
+    }
+    .kpiCardValue {
+        font-size: 16px;
+    }
+    .sapMTableRowCell {
+        font-size: 11px !important;
+        padding: 5px 6px !important;
+    }
+    .soScrollContainer {
+        height: 400px !important;
+    }
+}
+
+/* SCROLLBAR */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
