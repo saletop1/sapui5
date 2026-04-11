@@ -64,15 +64,33 @@
                         <Toolbar>
                             <core:HTML id="selectedBadge" content="&lt;span&gt;&lt;/span&gt;"/>
                             <Label text="Status:" labelFor="statusFilter" class="sapUiSmallMarginBegin"/>
-                            <ComboBox id="statusFilter" selectedKey="" width="120px" selectionChange="onStatusFilterChange" class="sapUiTinyMarginEnd">
+                            <ComboBox id="statusFilter" selectedKey="ALL" width="120px" selectionChange="onStatusFilterChange" class="sapUiTinyMarginEnd">
                                 <items>
-                                    <core:ListItem key="" text="All Status"/>
+                                    <core:ListItem key="ALL" text="All Status"/>
                                     <core:ListItem key="Pending" text="Pending"/>
                                     <core:ListItem key="Low" text="Low"/>
                                     <core:ListItem key="Medium" text="Medium"/>
                                     <core:ListItem key="Warning" text="Warning"/>
                                     <core:ListItem key="Prioritas" text="Prioritas"/>
                                     <core:ListItem key="None" text="None"/>
+                                </items>
+                            </ComboBox>
+                            <Label text="Bulan:" labelFor="monthFilter" class="sapUiSmallMarginBegin"/>
+                            <ComboBox id="monthFilter" selectedKey="ALL" width="130px" selectionChange="onMonthFilterChange" class="sapUiTinyMarginEnd">
+                                <items>
+                                    <core:ListItem key="ALL" text="Semua"/>
+                                    <core:ListItem key="0" text="Januari"/>
+                                    <core:ListItem key="1" text="Februari"/>
+                                    <core:ListItem key="2" text="Maret"/>
+                                    <core:ListItem key="3" text="April"/>
+                                    <core:ListItem key="4" text="Mei"/>
+                                    <core:ListItem key="5" text="Juni"/>
+                                    <core:ListItem key="6" text="Juli"/>
+                                    <core:ListItem key="7" text="Agustus"/>
+                                    <core:ListItem key="8" text="September"/>
+                                    <core:ListItem key="9" text="Oktober"/>
+                                    <core:ListItem key="10" text="November"/>
+                                    <core:ListItem key="11" text="Desember"/>
                                 </items>
                             </ComboBox>
                             <ToolbarSpacer/>
@@ -83,21 +101,22 @@
                         </Toolbar>
                     </headerToolbar>
                     <ScrollContainer id="soScrollContainer" class="soScrollContainer" height="500px" vertical="true" horizontal="false" width="100%">
-                        <Table id="soTable" items="{/results}" noDataText="Click a customer above or adjust filters to see SO details" alternateRowColors="true" growing="true" growingThreshold="50">
+                        <Table id="soTable" items="{/results}" noDataText="Click a customer above or adjust filters to see SO details" alternateRowColors="true" growing="true" growingThreshold="50" sticky="ColumnHeaders">
                             <!-- columns dan items sama seperti sebelumnya -->
                             <columns>
-                                <Column width="160px"><Text text="Sales Order"/></Column>
-                                <Column width="110px" hAlign="Center"><Text text="Created Date"/></Column>
-                                <Column width="250px"><Text text="Material"/></Column>
-                                <Column width="100px" hAlign="Center"><Text text="Qty Order"/></Column>
-                                <Column width="100px" hAlign="Center"><Text text="Shipped"/></Column>
-                                <Column width="120px" hAlign="Center"><Text text="Qty Outstanding"/></Column>
-                                <Column width="100px" hAlign="Center"><Text text="WHFG"/></Column>
-                                <Column width="100px" hAlign="Center"><Text text="Packing"/></Column>
-                                <Column width="120px" hAlign="Center"><Text text="Total Value"/></Column>
-                                <Column width="110px" hAlign="Center"><Text text="Req. Delivery"/></Column>
-                                <Column width="130px" hAlign="Center"><Text text="Days Running"/></Column>
-                                <Column width="100px" hAlign="Center"><Text text="Status"/></Column>
+                                <Column width="130px"><Text text="Sales Order"/></Column>
+                                <Column width="88px" hAlign="Center"><Text text="Created Date"/></Column>
+                                <Column width="180px"><Text text="Material"/></Column>
+                                <Column width="62px" hAlign="Center"><Text text="Qty Order"/></Column>
+                                <Column width="62px" hAlign="Center"><Text text="Shipped"/></Column>
+                                <Column width="62px" hAlign="Center"><Text text="Ots. SO"/></Column>
+                                <Column width="62px" hAlign="Center"><Text text="Ots. DO"/></Column>
+                                <Column width="55px" hAlign="Center"><Text text="WHFG"/></Column>
+                                <Column width="58px" hAlign="Center"><Text text="Packing"/></Column>
+                                <Column width="85px" hAlign="Center"><Text text="Total Value"/></Column>
+                                <Column width="88px" hAlign="Center"><Text text="Req. Delivery"/></Column>
+                                <Column width="80px" hAlign="Center"><Text text="Days Running"/></Column>
+                                <Column width="80px" hAlign="Center"><Text text="Status"/></Column>
                             </columns>
                             <items>
                                 <ColumnListItem>
@@ -108,6 +127,7 @@
                                         <Text text="{kwmengFmt}" wrapping="false" textAlign="Center"/>
                                         <Text text="{qtyGiFmt}" wrapping="false" textAlign="Center"/>
                                         <Text text="{qtyBalance2Fmt}" wrapping="false" textAlign="Center"/>
+                                        <Text text="{otsdoFmt}" wrapping="false" textAlign="Center"/>
                                         <Text text="{kalabFmt}" wrapping="false" textAlign="Center"/>
                                         <Text text="{kalab2Fmt}" wrapping="false" textAlign="Center"/>
                                         <Text text="{totalFmt}" wrapping="false" class="priceCell" textAlign="Center"/>

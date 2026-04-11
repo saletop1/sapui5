@@ -42,6 +42,7 @@ html, body {
 .kpiCardIcon  { font-size: 22px; line-height: 1; margin-bottom: 4px; }
 .kpiCardLabel { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: #6b7280; line-height: 1.2; }
 .kpiCardValue { font-size: 20px; font-weight: 700; color: #28a745; line-height: 1.15; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.kpiCardSub   { font-size: 11px; font-weight: 600; color: #9ca3af; line-height: 1.2; margin-top: 2px; }
 
 /* Aging Analysis Styles */
 .aging-card {
@@ -116,6 +117,9 @@ html, body {
     border-bottom: 1px solid #e5e7eb;
     text-align: left;
     background: #fafbfc;
+    position: sticky;
+    top: 0;
+    z-index: 2;
 }
 .custTable td {
     padding: 8px 10px;
@@ -142,6 +146,21 @@ html, body {
     font-weight: 600;
     background: #f8f9fa;
     padding: 8px;
+}
+
+/* Sticky header for SO detail table */
+#soTable .sapMListTblHeader,
+#soTable .sapMListTblHeaderCell {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 2 !important;
+    background: #f8f9fa !important;
+    border-bottom: 2px solid #dee2e6 !important;
+}
+.soScrollContainer .sapMListTblHeader {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 2 !important;
 }
 .priceCell {
     font-weight: 600;

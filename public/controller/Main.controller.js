@@ -30,7 +30,8 @@ sap.ui.define([
             this._searchQuery     = "";
             this._currentSource   = "semarang";
             this._dataLoaded      = false;
-            this._statusFilter    = "";
+            this._statusFilter    = "ALL";
+            this._monthFilter     = "ALL";
             this._expandedCustomers = {};
             this._updating        = false; // flag untuk mencegah reentrancy
 
@@ -65,13 +66,16 @@ sap.ui.define([
             this._selectedKunnr = null;
             this._selectedName  = null;
             this._searchQuery   = "";
-            this._statusFilter  = "";
+            this._statusFilter  = "ALL";
+            this._monthFilter   = "ALL";
             this._expandedCustomers = {};
 
             var sf = this.byId("searchField");
             if (sf) sf.setValue("");
             var statusCombo = this.byId("statusFilter");
-            if (statusCombo) statusCombo.setSelectedKey("");
+            if (statusCombo) statusCombo.setSelectedKey("ALL");
+            var monthCombo = this.byId("monthFilter");
+            if (monthCombo) monthCombo.setSelectedKey("ALL");
 
             this._updateSelectedBadge();
 
@@ -166,6 +170,8 @@ sap.ui.define([
                         var kwmeng = parseFloat(x.kwmeng) || 0;
                         var qtyGi = parseFloat(x.qty_gi) || 0;
                         var qtyBalance2 = qtyBalance;
+                        var otsdoRaw = x.otsdo || "0";
+                        var otsdoNum = parseFloat(otsdoRaw.toString().replace(/,/g, '')) || 0;
                         var kalabRaw = x.kalab || "0";
                         var kalab2Raw = x.kalab2 || "0";
                         var kalabNum = parseFloat(kalabRaw.toString().replace(/,/g, '')) || 0;
@@ -199,6 +205,8 @@ sap.ui.define([
                             kwmeng:          kwmeng,
                             qtyGi:           qtyGi,
                             qtyBalance2:     qtyBalance2,
+                            otsdo:           otsdoNum,
+                            otsdoFmt:        that._plainNumberFmt(otsdoNum),
                             kalab:           kalabNum,
                             kalab2:          kalab2Num,
                             price:           price,
@@ -272,11 +280,38 @@ sap.ui.define([
             var soUnik = new Set(data.map(function (r) { return r.vbeln; })).size;
             var totalQtyAll = data.reduce(function (s, r) { return s + r.quantity; }, 0);
 
+            var totalOtsDO = data.reduce(function (s, r) { return s + r.otsdo; }, 0);
+            var soOtsDOSet = new Set();
+            data.forEach(function (r) {
+                if (r.otsdo > 0) soOtsDOSet.add(r.vbeln);
+            });
+            var soOtsDOCount = soOtsDOSet.size;
+
             var cards = [
-                { icon: "📦", label: "Total Qty",   value: Math.floor(totalQtyAll).toLocaleString("en-US") },
-                { icon: "💵", label: "Total Value",  value: this._usdNoDecimal(tv) },
-                { icon: "👥", label: "Customers",    value: String(uc) },
-                { icon: "🧾", label: "Total SO",     value: String(soUnik) }
+                {
+                    icon: "📦",
+                    label: "Total Qty / SO",
+                    value: Math.floor(totalQtyAll).toLocaleString("en-US"),
+                    sub: soUnik + " SO"
+                },
+                {
+                    icon: "🚚",
+                    label: "Ots. DO",
+                    value: Math.floor(totalOtsDO).toLocaleString("en-US"),
+                    sub: soOtsDOCount + " SO"
+                },
+                {
+                    icon: "💵",
+                    label: "Total Value",
+                    value: this._usdNoDecimal(tv),
+                    sub: null
+                },
+                {
+                    icon: "👥",
+                    label: "Customers",
+                    value: String(uc),
+                    sub: null
+                }
             ];
 
             var html = cards.map(function (c) {
@@ -284,6 +319,7 @@ sap.ui.define([
                      +   '<div class="kpiCardIcon">'  + c.icon  + '</div>'
                      +   '<div class="kpiCardLabel">' + c.label + '</div>'
                      +   '<div class="kpiCardValue">' + c.value + '</div>'
+                     +   (c.sub ? '<div class="kpiCardSub">' + c.sub + '</div>' : '')
                      + '</div>';
             }).join("");
 
@@ -310,6 +346,7 @@ sap.ui.define([
             var q = this._searchQuery;
             var kunnr = this._selectedKunnr;
             var statusFilter = this._statusFilter;
+            var monthFilter = this._monthFilter;
             var filtered = data.filter(function (r) {
                 var matchCust = !kunnr || r.kunnr === kunnr;
                 var matchSearch = !q
@@ -318,8 +355,9 @@ sap.ui.define([
                     || r.item.toLowerCase().includes(q)
                     || r.matnr.toLowerCase().includes(q)
                     || (r.bstnk && r.bstnk.toLowerCase().includes(q));
-                var matchStatus = !statusFilter || r.status === statusFilter;
-                return matchCust && matchSearch && matchStatus;
+                var matchStatus = !statusFilter || statusFilter === "ALL" || r.status === statusFilter;
+                var matchMonth = that._matchMonthFilter(r.orderDate, monthFilter);
+                return matchCust && matchSearch && matchStatus && matchMonth;
             });
 
             var categories = [
@@ -339,16 +377,19 @@ sap.ui.define([
                         kunnr: r.kunnr,
                         totalValue: 0,
                         totalQty: 0,
+                        totalOtsDO: 0,
                         count: 0,
                         buckets: [0, 0, 0, 0, 0],
                         bucketQty: [0, 0, 0, 0, 0],
                         bucketCount: [0, 0, 0, 0, 0],
-                        bucketSO: [new Set(), new Set(), new Set(), new Set(), new Set()]
+                        bucketSO: [new Set(), new Set(), new Set(), new Set(), new Set()],
+                        bucketOtsDO: [new Set(), new Set(), new Set(), new Set(), new Set()]
                     });
                 }
                 var c = custMap.get(r.kunnr);
                 c.totalValue += r.totalValue;
                 c.totalQty += r.quantity;
+                c.totalOtsDO += r.otsdo;
                 c.count++;
                 for (var i = 0; i < categories.length; i++) {
                     if (r.daysLeft >= categories[i].min && r.daysLeft <= categories[i].max) {
@@ -356,6 +397,9 @@ sap.ui.define([
                         c.bucketQty[i] += r.quantity;
                         c.bucketCount[i]++;
                         c.bucketSO[i].add(r.vbeln);
+                        if (r.otsdo > 0) {
+                            c.bucketOtsDO[i].add(r.vbeln);
+                        }
                         break;
                     }
                 }
@@ -457,24 +501,31 @@ sap.ui.define([
                     html += '<thead><tr style="border-bottom:1px solid #e5e7eb;">';
                     html += '<th style="text-align:left;padding:4px 6px;color:#6b7280;font-size:10px;font-weight:700;">Status</th>';
                     html += '<th style="text-align:center;padding:4px 6px;color:#6b7280;font-size:10px;font-weight:700;">SO</th>';
+                    html += '<th style="text-align:center;padding:4px 6px;color:#6b7280;font-size:10px;font-weight:700;">Ots DO</th>';
                     html += '<th style="text-align:right;padding:4px 6px;color:#6b7280;font-size:10px;font-weight:700;">Qty</th>';
                     html += '<th style="text-align:right;padding:4px 6px;color:#6b7280;font-size:10px;font-weight:700;">Value</th>';
                     html += '</tr></thead><tbody>';
                     for (var ei = 0; ei < categories.length; ei++) {
                         if (c.bucketCount[ei] > 0) {
                             html += '<tr style="border-bottom:1px solid #f3f4f6;">';
-                            html += '<td style="padding:4px 6px;"><span style="display:inline-flex;align-items:center;gap:4px;"><span style="width:8px;height:8px;border-radius:2px;background:' + categories[ei].color + ';display:inline-block;"></span><span style="font-weight:600;color:' + categories[ei].color + ';">' + categories[ei].label + '</span><span style="color:#9ca3af;font-size:9px;">(' + categories[ei].name + ')</span></span></td>';
+                            html += '<td style="padding:4px 6px;"><span style="display:inline-flex;align-items:center;gap:4px;"><span style="width:8px;height:8px;border-radius:2px;background:' + categories[ei].color + ';display:inline-block;"></span><span style="font-weight:700;font-size:12px;color:#1f2937;">' + categories[ei].label + '</span><span style="color:#6b7280;font-size:10px;">(' + categories[ei].name + ')</span></span></td>';
                             html += '<td style="padding:4px 6px;text-align:center;font-weight:600;">' + c.bucketSO[ei].size + '</td>';
+                            html += '<td style="padding:4px 6px;text-align:center;font-weight:600;color:#e65100;">' + c.bucketOtsDO[ei].size + '</td>';
                             html += '<td style="padding:4px 6px;text-align:right;">' + Math.floor(c.bucketQty[ei]).toLocaleString('en-US') + '</td>';
-                            html += '<td style="padding:4px 6px;text-align:right;font-weight:700;">' + that._usdNoDecimal(c.buckets[ei]) + '</td>';
+                            html += '<td style="padding:4px 6px;text-align:right;font-weight:700;font-size:12px;color:#1f2937;">' + that._usdNoDecimal(c.buckets[ei]) + '</td>';
                             html += '</tr>';
                         }
                     }
                     var totalSO = new Set();
-                    for (var si = 0; si < 5; si++) { c.bucketSO[si].forEach(function(v){ totalSO.add(v); }); }
+                    var totalOtsDOSet = new Set();
+                    for (var si = 0; si < 5; si++) {
+                        c.bucketSO[si].forEach(function(v){ totalSO.add(v); });
+                        c.bucketOtsDO[si].forEach(function(v){ totalOtsDOSet.add(v); });
+                    }
                     html += '<tr style="border-top:2px solid #d1d5db;background:#f9fafb;">';
                     html += '<td style="padding:4px 6px;font-weight:700;color:#374151;">Total</td>';
                     html += '<td style="padding:4px 6px;text-align:center;font-weight:700;">' + totalSO.size + '</td>';
+                    html += '<td style="padding:4px 6px;text-align:center;font-weight:700;color:#e65100;">' + totalOtsDOSet.size + '</td>';
                     html += '<td style="padding:4px 6px;text-align:right;font-weight:700;">' + Math.floor(c.totalQty).toLocaleString('en-US') + '</td>';
                     html += '<td style="padding:4px 6px;text-align:right;font-weight:700;color:#166534;">' + that._usdNoDecimal(c.totalValue) + '</td>';
                     html += '</tr>';
@@ -619,10 +670,24 @@ sap.ui.define([
             this._applyFilters();
         },
 
+        onMonthFilterChange: function (oEvent) {
+            this._monthFilter = oEvent.getParameter("selectedItem").getKey();
+            this._applyFilters();
+            this._updateAgingAnalysis();
+        },
+
+        _matchMonthFilter: function (orderDate, monthKey) {
+            if (!monthKey || monthKey === "ALL") return true;
+            if (!orderDate) return false;
+            return orderDate.getMonth() === parseInt(monthKey, 10);
+        },
+
         _applyFilters: function () {
             var q     = this._searchQuery;
             var kunnr = this._selectedKunnr;
             var statusFilter = this._statusFilter;
+            var monthFilter = this._monthFilter;
+            var that = this;
 
             var filtered = this._allData.filter(function (r) {
                 var matchCust   = !kunnr || r.kunnr === kunnr;
@@ -632,8 +697,9 @@ sap.ui.define([
                     || r.item.toLowerCase().includes(q)
                     || r.matnr.toLowerCase().includes(q)
                     || (r.bstnk && r.bstnk.toLowerCase().includes(q));
-                var matchStatus = !statusFilter || r.status === statusFilter;
-                return matchCust && matchSearch && matchStatus;
+                var matchStatus = !statusFilter || statusFilter === "ALL" || r.status === statusFilter;
+                var matchMonth = that._matchMonthFilter(r.orderDate, monthFilter);
+                return matchCust && matchSearch && matchStatus && matchMonth;
             });
 
             filtered.sort(function(a, b) {
@@ -654,6 +720,8 @@ sap.ui.define([
             var q     = this._searchQuery;
             var kunnr = this._selectedKunnr;
             var statusFilter = this._statusFilter;
+            var monthFilter = this._monthFilter;
+            var that = this;
 
             var filtered = this._allData.filter(function (r) {
                 var matchCust   = !kunnr || r.kunnr === kunnr;
@@ -663,8 +731,9 @@ sap.ui.define([
                     || r.item.toLowerCase().includes(q)
                     || r.matnr.toLowerCase().includes(q)
                     || (r.bstnk && r.bstnk.toLowerCase().includes(q));
-                var matchStatus = !statusFilter || r.status === statusFilter;
-                return matchCust && matchSearch && matchStatus;
+                var matchStatus = !statusFilter || statusFilter === "ALL" || r.status === statusFilter;
+                var matchMonth = that._matchMonthFilter(r.orderDate, monthFilter);
+                return matchCust && matchSearch && matchStatus && matchMonth;
             });
 
             filtered.sort(function(a, b) {
@@ -726,8 +795,8 @@ sap.ui.define([
                 var fileName = "SO_" + cfg.label + "_" + label.replace(/\s+/g, "_") + "_" + that._dateStamp() + ".xlsx";
 
                 var wsData = [[
-                    "Sales Order (PO)", "Created Date", "Material", "Qty Order", "Shipped", "Qty Outstanding",
-                    "WHFG", "Packing", "Total Value (USD)", "Req. Delivery", "Days Running", "Status"
+                    "Sales Order (PO)", "Created Date", "Material", "Qty Order", "Shipped", "Ots. SO",
+                    "Ots. DO", "WHFG", "Packing", "Total Value (USD)", "Req. Delivery", "Days Running", "Status"
                 ]];
 
                 data.forEach(function (r) {
@@ -739,6 +808,7 @@ sap.ui.define([
                         Math.floor(r.kwmeng),
                         Math.floor(r.qtyGi),
                         Math.floor(r.qtyBalance2),
+                        Math.floor(r.otsdo),
                         Math.floor(r.kalab).toString(),
                         Math.floor(r.kalab2).toString(),
                         r.totalValue,
@@ -749,12 +819,12 @@ sap.ui.define([
                 });
 
                 var tv = data.reduce(function (s, r) { return s + r.totalValue; }, 0);
-                wsData.push(["", "", "", "", "", "", "", "TOTAL", tv, "", "", ""]);
+                wsData.push(["", "", "", "", "", "", "", "", "TOTAL", tv, "", "", ""]);
 
                 var ws = XLSXLib.utils.aoa_to_sheet(wsData);
                 ws["!cols"] = [
                     { wch: 25 }, { wch: 14 }, { wch: 35 }, { wch: 12 }, { wch: 12 }, { wch: 12 },
-                    { wch: 12 }, { wch: 12 }, { wch: 18 }, { wch: 14 }, { wch: 12 }, { wch: 10 }
+                    { wch: 10 }, { wch: 12 }, { wch: 12 }, { wch: 18 }, { wch: 14 }, { wch: 12 }, { wch: 10 }
                 ];
 
                 var wb = XLSXLib.utils.book_new();
@@ -829,6 +899,7 @@ sap.ui.define([
                         Math.floor(r.kwmeng),
                         Math.floor(r.qtyGi),
                         Math.floor(r.qtyBalance2),
+                        Math.floor(r.otsdo),
                         Math.floor(r.kalab).toString(),
                         Math.floor(r.kalab2).toString(),
                         that._usdNoDecimal(r.totalValue),
@@ -841,28 +912,30 @@ sap.ui.define([
                 doc.autoTable({
                     startY: 32,
                     head: [[
-                        "No", "Sales Order", "Created Date", "Material", "Qty Order", "Shipped", "Qty Outstanding",
-                        "WHFG", "Packing", "Total Value", "Req. Delivery", "Days Running", "Status"
+                        "No", "Sales Order", "Created Date", "Material", "Qty Order", "Shipped", "Ots. SO",
+                        "Ots. DO", "WHFG", "Packing", "Total Value", "Req. Delivery", "Days Running", "Status"
                     ]],
                     body: rows,
-                    tableWidth: 277,
-                    styles: { fontSize: 7, cellPadding: 1.5, overflow: 'linebreak', textColor: [0,0,0] },
-                    headStyles: { fillColor: [134, 179, 130], textColor: 255, fontStyle: "bold", fontSize: 7 },
+                    margin: { left: 10, right: 10 },
+                    tableWidth: doc.internal.pageSize.getWidth() - 20,
+                    styles: { fontSize: 7, cellPadding: 1.5, overflow: 'linebreak', textColor: [0,0,0], halign: 'center' },
+                    headStyles: { fillColor: [134, 179, 130], textColor: 255, fontStyle: "bold", fontSize: 7, halign: 'center' },
                     alternateRowStyles: { fillColor: [240, 248, 240] },
                     columnStyles: {
                         0: { halign: "center", cellWidth: 8 },
-                        1: { cellWidth: 30 },
-                        2: { halign: "center", cellWidth: 16 },
-                        3: { cellWidth: 35 },
-                        4: { halign: "right", cellWidth: 12 },
-                        5: { halign: "right", cellWidth: 12 },
-                        6: { halign: "right", cellWidth: 12 },
-                        7: { halign: "center", cellWidth: 12 },
-                        8: { halign: "center", cellWidth: 12 },
-                        9: { halign: "right", fontStyle: "bold", cellWidth: 22 },
-                        10: { halign: "center", cellWidth: 16 },
+                        1: { halign: "left", cellWidth: 36 },
+                        2: { halign: "center", cellWidth: 18 },
+                        3: { halign: "left", cellWidth: 42 },
+                        4: { halign: "center", cellWidth: 16 },
+                        5: { halign: "center", cellWidth: 16 },
+                        6: { halign: "center", cellWidth: 16 },
+                        7: { halign: "center", cellWidth: 15 },
+                        8: { halign: "center", cellWidth: 16 },
+                        9: { halign: "center", cellWidth: 16 },
+                        10: { halign: "center", fontStyle: "bold", cellWidth: 22 },
                         11: { halign: "center", cellWidth: 18 },
-                        12: { halign: "center", cellWidth: 18 }
+                        12: { halign: "center", cellWidth: 18 },
+                        13: { halign: "center", cellWidth: 20 }
                     },
                     didDrawPage: function (d) {
                         doc.setFontSize(7);
