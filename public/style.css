@@ -1,11 +1,66 @@
-/* RESET & GLOBAL */
+/* ===== CSS VARIABLES (LIGHT / DARK) ===== */
+:root {
+    --bg-main: #eef1f5;
+    --bg-glass: rgba(255,255,255,0.55);
+    --bg-glass-solid: rgba(255,255,255,0.85);
+    --bg-card: rgba(255,255,255,0.6);
+    --bg-card-hover: rgba(255,255,255,0.8);
+    --bg-header: rgba(255,255,255,0.65);
+    --bg-table-header: rgba(248,249,250,0.9);
+    --bg-table-alt: rgba(0,0,0,0.02);
+    --bg-pagination: rgba(248,249,250,0.8);
+    --border-light: rgba(0,0,0,0.08);
+    --border-medium: rgba(0,0,0,0.12);
+    --text-primary: #111827;
+    --text-secondary: #374151;
+    --text-muted: #6b7280;
+    --text-faint: #9ca3af;
+    --accent: #28a745;
+    --shadow-sm: 0 2px 8px rgba(0,0,0,0.06);
+    --shadow-md: 0 4px 16px rgba(0,0,0,0.08);
+    --shadow-lg: 0 8px 32px rgba(0,0,0,0.1);
+    --blur: 16px;
+    --active-row-bg: rgba(255,247,237,0.7);
+    --scrollbar-track: rgba(0,0,0,0.04);
+    --scrollbar-thumb: rgba(0,0,0,0.15);
+    --scrollbar-hover: rgba(0,0,0,0.25);
+}
+
+.dark-theme {
+    --bg-main: #0f1117;
+    --bg-glass: rgba(30,32,40,0.6);
+    --bg-glass-solid: rgba(30,32,40,0.9);
+    --bg-card: rgba(35,38,48,0.65);
+    --bg-card-hover: rgba(45,48,58,0.8);
+    --bg-header: rgba(25,28,35,0.75);
+    --bg-table-header: rgba(30,33,42,0.95);
+    --bg-table-alt: rgba(255,255,255,0.03);
+    --bg-pagination: rgba(30,33,42,0.85);
+    --border-light: rgba(255,255,255,0.06);
+    --border-medium: rgba(255,255,255,0.1);
+    --text-primary: #f1f5f9;
+    --text-secondary: #cbd5e1;
+    --text-muted: #94a3b8;
+    --text-faint: #64748b;
+    --accent: #34d058;
+    --shadow-sm: 0 2px 8px rgba(0,0,0,0.3);
+    --shadow-md: 0 4px 16px rgba(0,0,0,0.4);
+    --shadow-lg: 0 8px 32px rgba(0,0,0,0.5);
+    --active-row-bg: rgba(120,80,20,0.25);
+    --scrollbar-track: rgba(255,255,255,0.04);
+    --scrollbar-thumb: rgba(255,255,255,0.15);
+    --scrollbar-hover: rgba(255,255,255,0.25);
+}
+
+/* ===== RESET & GLOBAL ===== */
 html, body {
     margin: 0;
     padding: 0;
     height: 100%;
     width: 100%;
     overflow: auto;
-    background: #f0f2f5;
+    background: var(--bg-main);
+    transition: background 0.3s ease;
 }
 #content, .sapUiBody, .sapUiView {
     height: 100%;
@@ -15,7 +70,85 @@ html, body {
     display: block;
 }
 
-/* KPI CARDS */
+/* ===== SAPUI5 OVERRIDES FOR THEME ===== */
+.dark-theme .sapMPage,
+.dark-theme .sapMPageBgSolid {
+    background: var(--bg-main) !important;
+}
+.dark-theme .sapMBar,
+.dark-theme .sapMTB {
+    background: var(--bg-header) !important;
+    backdrop-filter: blur(var(--blur)) !important;
+    -webkit-backdrop-filter: blur(var(--blur)) !important;
+}
+.dark-theme .sapMBarMiddle .sapMText,
+.dark-theme .sapMBarRight .sapMText,
+.dark-theme .sapMBarLeft .sapMTitle,
+.dark-theme .sapMBarLeft .sapMText,
+.dark-theme .sapMLabel,
+.dark-theme .sapMText {
+    color: var(--text-secondary) !important;
+}
+.dark-theme .sapMPanel {
+    background: var(--bg-glass) !important;
+    backdrop-filter: blur(var(--blur)) !important;
+    -webkit-backdrop-filter: blur(var(--blur)) !important;
+    border-color: var(--border-light) !important;
+}
+.dark-theme .sapMPanelContent {
+    background: transparent !important;
+}
+.dark-theme .sapMSlt,
+.dark-theme .sapMSltHoverable,
+.dark-theme .sapMSltArrow {
+    background: var(--bg-card) !important;
+    border-color: var(--border-medium) !important;
+    color: var(--text-primary) !important;
+}
+.dark-theme .sapMSltLabel {
+    color: var(--text-primary) !important;
+}
+.dark-theme .sapMInputBaseInner,
+.dark-theme .sapMSFI {
+    background: var(--bg-card) !important;
+    border-color: var(--border-medium) !important;
+    color: var(--text-primary) !important;
+}
+.dark-theme .sapMListTbl {
+    background: transparent !important;
+}
+.dark-theme .sapMListTblRow,
+.dark-theme .sapMListTblCell {
+    background: transparent !important;
+    color: var(--text-secondary) !important;
+    border-color: var(--border-light) !important;
+}
+.dark-theme .sapMListTblRow:nth-child(even) {
+    background: var(--bg-table-alt) !important;
+}
+.dark-theme .sapMListNoData {
+    color: var(--text-muted) !important;
+}
+.dark-theme .sapMScrollContScroll,
+.dark-theme .sapMScrollCont {
+    background: transparent !important;
+}
+.dark-theme .sapMTitle {
+    color: var(--text-primary) !important;
+}
+
+/* ===== FROSTED GLASS PANELS ===== */
+.sapMPanel {
+    background: var(--bg-glass) !important;
+    backdrop-filter: blur(var(--blur)) !important;
+    -webkit-backdrop-filter: blur(var(--blur)) !important;
+    border: 1px solid var(--border-light) !important;
+    border-radius: 14px !important;
+    box-shadow: var(--shadow-sm) !important;
+    overflow: hidden;
+}
+
+/* ===== KPI CARDS ===== */
 .kpiRow {
     display: flex;
     flex-wrap: wrap;
@@ -25,98 +158,111 @@ html, body {
 .kpiCard {
     flex: 1;
     min-width: 130px;
-    background: white;
-    border-radius: 10px;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
-    padding: 10px 14px;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255,255,255,0.25);
+    border-radius: 14px;
+    box-shadow: var(--shadow-md);
+    padding: 12px 16px;
     display: flex;
     flex-direction: column;
     gap: 2px;
     box-sizing: border-box;
-    transition: all 0.2s ease;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
 }
+.kpiCard::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 14px;
+    opacity: 0.12;
+    z-index: 0;
+    transition: opacity 0.3s;
+}
+.kpiCard > * { position: relative; z-index: 1; }
 .kpiCard:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-lg);
 }
-.kpiCardIcon  { font-size: 22px; line-height: 1; margin-bottom: 4px; }
-.kpiCardLabel { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: #6b7280; line-height: 1.2; }
-.kpiCardValue { font-size: 20px; font-weight: 700; color: #28a745; line-height: 1.15; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.kpiCardSub   { font-size: 11px; font-weight: 600; color: #9ca3af; line-height: 1.2; margin-top: 2px; }
+.kpiCard:hover::before { opacity: 0.18; }
 
-/* Aging Analysis Styles */
+/* Gradient variants - Light */
+.kpiGrad1 { background: linear-gradient(135deg, rgba(59,130,246,0.12), rgba(147,51,234,0.10)); }
+.kpiGrad1::before { background: linear-gradient(135deg, #3b82f6, #9333ea); }
+.kpiGrad2 { background: linear-gradient(135deg, rgba(249,115,22,0.12), rgba(239,68,68,0.10)); }
+.kpiGrad2::before { background: linear-gradient(135deg, #f97316, #ef4444); }
+.kpiGrad3 { background: linear-gradient(135deg, rgba(16,185,129,0.12), rgba(6,182,212,0.10)); }
+.kpiGrad3::before { background: linear-gradient(135deg, #10b981, #06b6d4); }
+.kpiGrad4 { background: linear-gradient(135deg, rgba(168,85,247,0.12), rgba(236,72,153,0.10)); }
+.kpiGrad4::before { background: linear-gradient(135deg, #a855f7, #ec4899); }
+
+/* Gradient variants - Dark */
+.dark-theme .kpiGrad1 { background: linear-gradient(135deg, rgba(59,130,246,0.18), rgba(147,51,234,0.15)); border-color: rgba(99,102,241,0.2); }
+.dark-theme .kpiGrad2 { background: linear-gradient(135deg, rgba(249,115,22,0.18), rgba(239,68,68,0.15)); border-color: rgba(249,115,22,0.2); }
+.dark-theme .kpiGrad3 { background: linear-gradient(135deg, rgba(16,185,129,0.18), rgba(6,182,212,0.15)); border-color: rgba(16,185,129,0.2); }
+.dark-theme .kpiGrad4 { background: linear-gradient(135deg, rgba(168,85,247,0.18), rgba(236,72,153,0.15)); border-color: rgba(168,85,247,0.2); }
+.dark-theme .kpiCard::before { opacity: 0.15; }
+.dark-theme .kpiCard:hover::before { opacity: 0.25; }
+
+.kpiCardIcon  { font-size: 22px; line-height: 1; margin-bottom: 4px; }
+.kpiCardLabel { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: var(--text-muted); line-height: 1.2; }
+.kpiCardValue { font-size: 20px; font-weight: 700; color: var(--text-primary); line-height: 1.15; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.kpiCardSub   { font-size: 11px; font-weight: 600; color: var(--text-muted); line-height: 1.2; margin-top: 2px; }
+
+/* Color accents per gradient */
+.kpiGrad1 .kpiCardValue { color: #3b82f6; }
+.kpiGrad2 .kpiCardValue { color: #f97316; }
+.kpiGrad3 .kpiCardValue { color: #10b981; }
+.kpiGrad4 .kpiCardValue { color: #a855f7; }
+.dark-theme .kpiGrad1 .kpiCardValue { color: #60a5fa; }
+.dark-theme .kpiGrad2 .kpiCardValue { color: #fb923c; }
+.dark-theme .kpiGrad3 .kpiCardValue { color: #34d399; }
+.dark-theme .kpiGrad4 .kpiCardValue { color: #c084fc; }
+
+/* ===== AGING ANALYSIS ===== */
 .aging-card {
-    background: white;
-    border-radius: 8px;
+    background: var(--bg-card);
+    backdrop-filter: blur(var(--blur));
+    -webkit-backdrop-filter: blur(var(--blur));
+    border-radius: 10px;
     padding: 12px;
     margin-bottom: 12px;
     transition: all 0.2s;
-    border: 1px solid #f0f0f0;
+    border: 1px solid var(--border-light);
+    box-shadow: var(--shadow-sm);
 }
 .aging-card:hover {
-    background: #f9fafb;
-    border-color: #e5e7eb;
+    background: var(--bg-card-hover);
+    border-color: var(--border-medium);
 }
-.aging-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 4px;
-}
-.aging-title {
-    font-weight: 600;
-    color: #374151;
-    font-size: 13px;
-}
-.aging-value {
-    font-weight: bold;
-    color: #111827;
-    font-size: 13px;
-}
-.aging-stats {
-    display: flex;
-    justify-content: space-between;
-    font-size: 11px;
-    color: #6b7280;
-    margin-top: 4px;
-}
-.progress-bar {
-    width: 100%;
-    background-color: #e5e7eb;
-    border-radius: 999px;
-    height: 6px;
-    margin-top: 8px;
-    overflow: hidden;
-}
-.progress-fill {
-    height: 100%;
-    border-radius: 999px;
-}
+.aging-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+.aging-title { font-weight: 600; color: var(--text-secondary); font-size: 13px; }
+.aging-value { font-weight: bold; color: var(--text-primary); font-size: 13px; }
+.aging-stats { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+.progress-bar { width: 100%; background-color: var(--border-light); border-radius: 999px; height: 6px; margin-top: 8px; overflow: hidden; }
+.progress-fill { height: 100%; border-radius: 999px; }
 .fill-emerald { background-color: #10b981; }
 .fill-yellow { background-color: #eab308; }
 .fill-orange { background-color: #f97316; }
 .fill-red { background-color: #ef4444; }
 .fill-darkred { background-color: #b91c1c; }
 
-/* CUSTOMER TABLE */
-.custTableContainer {
-    border-radius: 8px;
-    width: 100%;
-}
-.custTable {
-    width: 100%;
-    border-collapse: collapse;
-}
+/* ===== CUSTOMER TABLE ===== */
+.custTableContainer { border-radius: 8px; width: 100%; }
+.custTable { width: 100%; border-collapse: collapse; }
 .custTable th {
     padding: 8px 10px;
     font-size: 11px;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: .04em;
-    color: #6b7280;
-    border-bottom: 1px solid #e5e7eb;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border-medium);
     text-align: left;
-    background: #fafbfc;
+    background: var(--bg-table-header);
+    backdrop-filter: blur(var(--blur));
     position: sticky;
     top: 0;
     z-index: 2;
@@ -124,19 +270,14 @@ html, body {
 .custTable td {
     padding: 8px 10px;
     font-size: 12px;
-    border-bottom: 1px solid #f3f4f6;
+    border-bottom: 1px solid var(--border-light);
+    color: var(--text-secondary);
 }
-.custTable tbody tr {
-    cursor: pointer;
-}
-.custTable tbody tr:hover {
-    background: #f9fafb;
-}
-.custTable .active-row {
-    background: #fff7ed;
-}
+.custTable tbody tr { cursor: pointer; }
+.custTable tbody tr:hover { background: var(--bg-card-hover); }
+.custTable .active-row { background: var(--active-row-bg); }
 
-/* DETAIL TABLE */
+/* ===== DETAIL TABLE ===== */
 .sapMTableRowCell {
     font-size: 13px !important;
     padding: 7px 8px !important;
@@ -144,7 +285,6 @@ html, body {
 .sapMColumnHeaderText {
     font-size: 12px !important;
     font-weight: 600;
-    background: #f8f9fa;
     padding: 8px;
 }
 
@@ -154,8 +294,10 @@ html, body {
     position: sticky !important;
     top: 0 !important;
     z-index: 2 !important;
-    background: #f8f9fa !important;
-    border-bottom: 2px solid #dee2e6 !important;
+    background: var(--bg-table-header) !important;
+    backdrop-filter: blur(var(--blur)) !important;
+    border-bottom: 2px solid var(--border-medium) !important;
+    color: var(--text-muted) !important;
 }
 .soScrollContainer .sapMListTblHeader {
     position: sticky !important;
@@ -164,10 +306,10 @@ html, body {
 }
 .priceCell {
     font-weight: 600;
-    color: #28a745 !important;
+    color: var(--accent) !important;
 }
 
-/* Status badge */
+/* ===== STATUS BADGE ===== */
 .statusCell {
     display: inline-block;
     padding: 4px 10px;
@@ -176,98 +318,217 @@ html, body {
     font-weight: 600;
     text-align: center;
     min-width: 70px;
-    background: #f3f4f6;
-    color: #1f2937;
+    background: var(--bg-card);
+    color: var(--text-primary);
 }
+.statusNew { color: #06b6d4; }
 .statusPending { color: #6b7280; }
 .statusLow { color: #0284c7; }
 .statusMedium { color: #ca8a04; }
 .statusWarning { color: #d97706; }
 .statusPrioritas { color: #dc2626; }
-.statusNone { color: #9ca3af; }
 
-/* MATERIAL CELL */
-.materialCode { font-size: 11px !important; color: #6c757d; font-family: monospace; }
-.materialDesc { font-size: 13px !important; font-weight: 600; color: #212529; }
+/* ===== MATERIAL CELL ===== */
+.materialCode { font-size: 11px !important; color: var(--text-muted); font-family: monospace; }
+.materialDesc { font-size: 13px !important; font-weight: 600; color: var(--text-primary); }
 
-/* FOOTER */
-.footerText    { font-size: 10px; color: #adb5bd; }
-.clockText     { font-size: 12px; color: #6c757d; }
-.rowCountText  { font-size: 11px; color: #6c757d; white-space: nowrap; }
+/* ===== FOOTER ===== */
+.footerText   { font-size: 10px; color: var(--text-faint); }
+.clockText    { font-size: 12px; color: var(--text-muted); }
+.rowCountText { font-size: 11px; color: var(--text-muted); white-space: nowrap; }
 
-/* SCROLL CONTAINERS */
+/* ===== SCROLL CONTAINERS ===== */
 .soScrollContainer {
     height: 500px !important;
     overflow-y: auto !important;
     overflow-x: auto !important;
-    display: block;
+    display: block !important;
     width: 100%;
 }
 #custScrollContainer {
     overflow-y: auto !important;
 }
 
-/* Tombol "More" pada tabel growing */
-.sapMTableGrowing {
-    background: #f8f9fa;
-    padding: 8px;
-    text-align: center;
-    border-top: 1px solid #e5e7eb;
+/* ===== PAGINATION ===== */
+.paginationBar {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 4px;
+    padding: 10px 0;
+    border-top: 1px solid var(--border-light);
+    background: var(--bg-pagination);
+    backdrop-filter: blur(var(--blur));
 }
-.sapMTableGrowing button {
-    background-color: #28a745;
-    color: white;
-    border: none;
-    padding: 6px 16px;
-    border-radius: 20px;
-    font-size: 12px;
+.pgBtn {
+    min-width: 32px;
+    height: 32px;
+    border: 1px solid var(--border-medium);
+    border-radius: 8px;
+    background: var(--bg-card);
+    backdrop-filter: blur(8px);
+    color: var(--text-secondary);
+    font-size: 13px;
+    font-weight: 600;
     cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
 }
-.sapMTableGrowing button:hover {
-    background-color: #218838;
+.pgBtn:hover:not(:disabled) {
+    background: var(--bg-card-hover);
+    border-color: var(--text-muted);
+}
+.pgBtn:disabled {
+    opacity: 0.35;
+    cursor: default;
+}
+.pgActive {
+    background: var(--accent) !important;
+    color: #fff !important;
+    border-color: var(--accent) !important;
+}
+.pgInfo {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-left: 8px;
 }
 
-/* AGENT FLOATING BUTTON */
+/* ===== AGENT FLOATING BUTTON ===== */
 .agentFloatingBtn {
     position: fixed;
     bottom: 20px;
     right: 20px;
     z-index: 1000;
     border-radius: 50px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    box-shadow: var(--shadow-lg);
 }
 
-/* RESPONSIVE */
+/* ===== TWO-PANEL LAYOUT ===== */
+.twoPanelRow {
+    flex-wrap: nowrap !important;
+}
+.twoPanelCol {
+    width: 49% !important;
+    min-width: 0 !important;
+    flex-shrink: 1 !important;
+}
+
+/* ===== RESPONSIVE - TABLET ===== */
+@media (max-width: 1024px) {
+    .kpiCard { min-width: 110px; padding: 10px 12px; }
+    .kpiCardValue { font-size: 17px; }
+    .kpiCardIcon { font-size: 18px; }
+}
+
+/* ===== RESPONSIVE - MOBILE ===== */
 @media (max-width: 768px) {
+    /* KPI: 2x2 grid */
+    .kpiRow {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr !important;
+        gap: 8px !important;
+    }
     .kpiCard {
-        min-width: 100px;
-        padding: 8px 10px;
+        min-width: 0 !important;
+        padding: 10px 12px;
     }
-    .kpiCardValue {
-        font-size: 16px;
+    .kpiCardIcon { font-size: 18px; margin-bottom: 2px; }
+    .kpiCardLabel { font-size: 9px; }
+    .kpiCardValue { font-size: 16px; }
+    .kpiCardSub { font-size: 10px; }
+
+    /* Two panels: stack vertically */
+    .twoPanelRow {
+        flex-wrap: wrap !important;
+        flex-direction: column !important;
     }
-    .sapMTableRowCell {
-        font-size: 11px !important;
-        padding: 5px 6px !important;
+    .twoPanelCol {
+        width: 100% !important;
+        margin-right: 0 !important;
+        margin-bottom: 8px;
     }
-    .soScrollContainer {
-        height: 400px !important;
+    .twoPanelCol .sapMPanel {
+        border-radius: 10px !important;
     }
+
+    /* Aging subtitle hide on mobile */
+    .agingSubtitle { display: none !important; }
+
+    /* Customer table */
+    .custTable th { padding: 6px 8px; font-size: 10px; }
+    .custTable td { padding: 6px 8px; font-size: 11px; }
+    #custScrollContainer { height: 250px !important; }
+
+    /* Aging cards */
+    .aging-card { padding: 10px; margin-bottom: 8px; }
+
+    /* Detail SO */
+    .soScrollContainer { height: 350px !important; }
+    .sapMTableRowCell { font-size: 11px !important; padding: 4px 5px !important; }
+
+    /* Table: allow horizontal scroll */
+    .soScrollContainer { overflow-x: auto !important; }
+    #soTable { min-width: 900px; }
+
+    /* Search field */
+    .sapMSF { width: 150px !important; }
+
+    /* Pagination */
+    .paginationBar { gap: 2px; padding: 8px 0; }
+    .pgBtn { min-width: 28px; height: 28px; font-size: 11px; }
+    .pgInfo { font-size: 10px; }
+
+    /* Header bar */
+    .sapMBar .sapMBarLeft .sapMTitle { font-size: 13px !important; }
+    .sapMBar .sapMBarLeft .sapMText { display: none !important; }
+    .sapMBar .sapMBarRight .sapMText { font-size: 10px !important; }
+
+    /* Footer */
+    .sapMBar .footerText { font-size: 9px; }
+
+    /* Panel headers */
+    .sapMPanelHdr,
+    .sapMPanel .sapMTBShrinkItem { font-size: 12px !important; }
+
+    /* Frosted panels */
+    .sapMPanel { border-radius: 10px !important; }
 }
 
-/* SCROLLBAR */
-::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+/* ===== RESPONSIVE - SMALL MOBILE ===== */
+@media (max-width: 480px) {
+    .kpiRow {
+        grid-template-columns: 1fr 1fr !important;
+        gap: 6px !important;
+    }
+    .kpiCard { padding: 8px 10px; }
+    .kpiCardIcon { font-size: 16px; }
+    .kpiCardLabel { font-size: 8px; }
+    .kpiCardValue { font-size: 14px; }
+    .kpiCardSub { font-size: 9px; }
+
+    /* Header: minimal */
+    .sapMBar .sapMBarLeft .sapMTitle { font-size: 12px !important; }
+    .sapMBar .sapMBarRight > *:not(#themeToggle) { font-size: 9px !important; }
+
+    /* Panels */
+    #custScrollContainer { height: 200px !important; }
+    .soScrollContainer { height: 300px !important; }
+
+    /* Toolbar labels hide on small screen */
+    .sapMPanel .sapMTB .sapMLabel { display: none !important; }
+
+    /* Select smaller */
+    .sapMPanel .sapMTB .sapMSlt { width: 90px !important; }
+    .sapMSF { width: 120px !important; }
+
+    /* Export buttons: icon only */
+    .sapMPanel .sapMTB .sapMBtn .sapMBtnContent .sapMBtnText { display: none !important; }
 }
-::-webkit-scrollbar-track {
-    background: #f1f1f1;
-    border-radius: 4px;
-}
-::-webkit-scrollbar-thumb {
-    background: #c1c1c1;
-    border-radius: 4px;
-}
-::-webkit-scrollbar-thumb:hover {
-    background: #a8a8a8;
-}
+
+/* ===== SCROLLBAR ===== */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: var(--scrollbar-track); border-radius: 4px; }
+::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--scrollbar-hover); }

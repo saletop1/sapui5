@@ -32,16 +32,45 @@ sap.ui.define([
             this._dataLoaded      = false;
             this._statusFilter    = "ALL";
             this._monthFilter     = "ALL";
+            this._projectionFilter = "ALL";
             this._expandedCustomers = {};
-            this._updating        = false; // flag untuk mencegah reentrancy
+            this._updating        = false;
+            this._currentPage     = 1;
+            this._pageSize        = 50;
+            this._filteredData    = [];
 
-            this.getView().setModel(new JSONModel({ results: [] }));
+            this.getView().setModel(new JSONModel({ results: [], resultsPaged: [] }));
 
             window.__soApp = this;
+
+            this._darkMode = localStorage.getItem("soDarkMode") === "true";
+            if (this._darkMode) document.body.classList.add("dark-theme");
+
+            var that = this;
+            this.getView().addEventDelegate({
+                onAfterRendering: function () {
+                    that._updateThemeIcon();
+                }
+            });
 
             this._tick();
             this._clockTimer = setInterval(this._tick.bind(this), 1000);
             this._loadData();
+        },
+
+        onToggleTheme: function () {
+            this._darkMode = !this._darkMode;
+            document.body.classList.toggle("dark-theme", this._darkMode);
+            localStorage.setItem("soDarkMode", String(this._darkMode));
+            this._updateThemeIcon();
+        },
+
+        _updateThemeIcon: function () {
+            var btn = this.byId("themeToggle");
+            if (btn) {
+                btn.setText(this._darkMode ? "☀️" : "🌙");
+                btn.setTooltip(this._darkMode ? "Switch to Light Mode" : "Switch to Dark Mode");
+            }
         },
 
         onExit: function () {
@@ -50,13 +79,15 @@ sap.ui.define([
         },
 
         _tick: function () {
-            var el = this.byId("clockText");
-            if (!el) return;
             var n = new Date();
-            el.setText(
-                n.toLocaleDateString("en-US", { weekday: "short", day: "numeric", month: "short", year: "numeric" })
-                + " · " + n.toLocaleTimeString("en-US")
-            );
+            var dateTime = n.toLocaleDateString("en-US", { weekday: "short", day: "numeric", month: "short", year: "numeric" })
+                + " · " + n.toLocaleTimeString("en-US", { hour12: false });
+
+            var el = this.byId("clockText");
+            if (el) el.setText(dateTime);
+
+            var footerClock = this.byId("footerClock");
+            if (footerClock) footerClock.setText(dateTime);
         },
 
         onSourceChange: function (oEvent) {
@@ -68,6 +99,7 @@ sap.ui.define([
             this._searchQuery   = "";
             this._statusFilter  = "ALL";
             this._monthFilter   = "ALL";
+            this._projectionFilter = "ALL";
             this._expandedCustomers = {};
 
             var sf = this.byId("searchField");
@@ -76,6 +108,8 @@ sap.ui.define([
             if (statusCombo) statusCombo.setSelectedKey("ALL");
             var monthCombo = this.byId("monthFilter");
             if (monthCombo) monthCombo.setSelectedKey("ALL");
+            var projCombo = this.byId("projectionFilter");
+            if (projCombo) projCombo.setSelectedKey("ALL");
 
             this._updateSelectedBadge();
 
@@ -134,13 +168,14 @@ sap.ui.define([
         },
 
         _getAgeInfo: function (orderDateObj) {
-            if (!orderDateObj) return { text: "-", status: "None", daysLeft: -1 };
+            if (!orderDateObj) return { text: "-", status: "New", daysLeft: -1 };
             var today = new Date();
             today.setHours(0, 0, 0, 0);
             var diffDays = Math.round((today - orderDateObj) / (1000 * 60 * 60 * 24));
             if (diffDays < 0) diffDays = 0;
-            var status = "None";
-            if (diffDays <= 14) status = "Pending";
+            var status = "New";
+            if (diffDays <= 7) status = "New";
+            else if (diffDays <= 14) status = "Pending";
             else if (diffDays <= 25) status = "Low";
             else if (diffDays <= 45) status = "Medium";
             else if (diffDays <= 60) status = "Warning";
@@ -240,10 +275,11 @@ sap.ui.define([
                                 || document.documentElement;
                     var savedScroll = isFirstLoad ? 0 : (scrollEl.scrollTop || 0);
 
+                    that._populateMonthFilter();
                     that._updateKPI();
                     that._buildCustTable();
                     that._applyFilters();
-                    that._updateAgingAnalysis(); // sekali saja
+                    that._updateAgingAnalysis();
 
                     that._dataLoaded = true;
 
@@ -254,16 +290,7 @@ sap.ui.define([
                     }
 
                     var footerEl = that.byId("footerInfo");
-                    if (footerEl) {
-                        footerEl.setText(
-                            "Sales Dashboard · " + cfg.label
-                            + " · Werks " + cfg.werks
-                            + " · Auart " + cfg.auart
-                        );
-                    }
-
-                    var upEl = that.byId("updateTime");
-                    if (upEl) upEl.setText("Update: " + new Date().toLocaleTimeString("en-US"));
+                    if (footerEl) footerEl.setText("Sales Dashboard · " + cfg.label);
 
                     MessageToast.show("✅ Data " + cfg.label + " loaded (" + that._allData.length + " rows)");
                 })
@@ -292,30 +319,34 @@ sap.ui.define([
                     icon: "📦",
                     label: "Total Qty / SO",
                     value: Math.floor(totalQtyAll).toLocaleString("en-US"),
-                    sub: soUnik + " SO"
+                    sub: soUnik + " SO",
+                    gradient: "kpiGrad1"
                 },
                 {
                     icon: "🚚",
                     label: "Ots. DO",
                     value: Math.floor(totalOtsDO).toLocaleString("en-US"),
-                    sub: soOtsDOCount + " SO"
+                    sub: soOtsDOCount + " SO",
+                    gradient: "kpiGrad2"
                 },
                 {
                     icon: "💵",
                     label: "Total Value",
                     value: this._usdNoDecimal(tv),
-                    sub: null
+                    sub: null,
+                    gradient: "kpiGrad3"
                 },
                 {
                     icon: "👥",
                     label: "Customers",
                     value: String(uc),
-                    sub: null
+                    sub: null,
+                    gradient: "kpiGrad4"
                 }
             ];
 
             var html = cards.map(function (c) {
-                return '<div class="kpiCard">'
+                return '<div class="kpiCard ' + c.gradient + '">'
                      +   '<div class="kpiCardIcon">'  + c.icon  + '</div>'
                      +   '<div class="kpiCardLabel">' + c.label + '</div>'
                      +   '<div class="kpiCardValue">' + c.value + '</div>'
@@ -333,6 +364,28 @@ sap.ui.define([
             } else {
                 this._expandedCustomers[kunnr] = true;
             }
+            this._updateAgingAnalysis();
+        },
+
+        filterByBucket: function (kunnr, statusLabel) {
+            // Select customer
+            var custData = this._allData.find(function(r) { return r.kunnr === kunnr; });
+            var custName = custData ? custData.customer : "";
+            this._selectedKunnr = kunnr;
+            this._selectedName = custName;
+
+            // Set status filter
+            this._statusFilter = statusLabel;
+            var statusCombo = this.byId("statusFilter");
+            if (statusCombo) statusCombo.setSelectedKey(statusLabel);
+
+            this._searchQuery = "";
+            var sf = this.byId("searchField");
+            if (sf) sf.setValue("");
+
+            this._updateSelectedBadge();
+            this._buildCustTable();
+            this._applyFilters();
             this._updateAgingAnalysis();
         },
 
@@ -356,12 +409,13 @@ sap.ui.define([
                     || r.matnr.toLowerCase().includes(q)
                     || (r.bstnk && r.bstnk.toLowerCase().includes(q));
                 var matchStatus = !statusFilter || statusFilter === "ALL" || r.status === statusFilter;
-                var matchMonth = that._matchMonthFilter(r.orderDate, monthFilter);
+                var matchMonth = that._matchMonthFilter(r.deliveryDate, monthFilter);
                 return matchCust && matchSearch && matchStatus && matchMonth;
             });
 
             var categories = [
-                { name: "0-14d", min: 0, max: 14, color: "#10b981", label: "Pending" },
+                { name: "0-7d", min: 0, max: 7, color: "#06b6d4", label: "New" },
+                { name: "8-14d", min: 8, max: 14, color: "#10b981", label: "Pending" },
                 { name: "15-25d", min: 15, max: 25, color: "#eab308", label: "Low" },
                 { name: "26-45d", min: 26, max: 45, color: "#f97316", label: "Medium" },
                 { name: "46-60d", min: 46, max: 60, color: "#ef4444", label: "Warning" },
@@ -379,11 +433,11 @@ sap.ui.define([
                         totalQty: 0,
                         totalOtsDO: 0,
                         count: 0,
-                        buckets: [0, 0, 0, 0, 0],
-                        bucketQty: [0, 0, 0, 0, 0],
-                        bucketCount: [0, 0, 0, 0, 0],
-                        bucketSO: [new Set(), new Set(), new Set(), new Set(), new Set()],
-                        bucketOtsDO: [new Set(), new Set(), new Set(), new Set(), new Set()]
+                        buckets: [0, 0, 0, 0, 0, 0],
+                        bucketQty: [0, 0, 0, 0, 0, 0],
+                        bucketCount: [0, 0, 0, 0, 0, 0],
+                        bucketSO: [new Set(), new Set(), new Set(), new Set(), new Set(), new Set()],
+                        bucketOtsDO: [new Set(), new Set(), new Set(), new Set(), new Set(), new Set()]
                     });
                 }
                 var c = custMap.get(r.kunnr);
@@ -408,7 +462,7 @@ sap.ui.define([
             var custList = Array.from(custMap.values()).sort(function (a, b) { return b.totalValue - a.totalValue; });
 
             var grandTotal = filtered.reduce(function (s, r) { return s + r.totalValue; }, 0);
-            var grandBuckets = [0, 0, 0, 0, 0];
+            var grandBuckets = [0, 0, 0, 0, 0, 0];
             filtered.forEach(function (r) {
                 for (var i = 0; i < categories.length; i++) {
                     if (r.daysLeft >= categories[i].min && r.daysLeft <= categories[i].max) {
@@ -488,7 +542,8 @@ sap.ui.define([
                     html += '<div style="display:flex;gap:4px;margin-top:5px;flex-wrap:wrap;">';
                     for (var di = 0; di < categories.length; di++) {
                         if (c.buckets[di] > 0) {
-                            html += '<span style="font-size:9px;padding:1px 6px;border-radius:10px;background:' + categories[di].color + '20;color:' + categories[di].color + ';font-weight:600;">' + categories[di].label + ' ' + that._usdNoDecimal(c.buckets[di]) + '</span>';
+                            var safeKunnrChip = c.kunnr.replace(/'/g, "\\'");
+                            html += '<span style="font-size:9px;padding:1px 6px;border-radius:10px;background:' + categories[di].color + '20;color:' + categories[di].color + ';font-weight:600;cursor:pointer;transition:opacity 0.15s;" onmouseover="this.style.opacity=\'0.7\'" onmouseout="this.style.opacity=\'1\'" onclick="event.stopPropagation();window.__soApp.filterByBucket(\'' + safeKunnrChip + '\',\'' + categories[di].label + '\')">' + categories[di].label + ' ' + that._usdNoDecimal(c.buckets[di]) + '</span>';
                         }
                     }
                     html += '</div>';
@@ -507,7 +562,8 @@ sap.ui.define([
                     html += '</tr></thead><tbody>';
                     for (var ei = 0; ei < categories.length; ei++) {
                         if (c.bucketCount[ei] > 0) {
-                            html += '<tr style="border-bottom:1px solid #f3f4f6;">';
+                            var safeKunnrBucket = c.kunnr.replace(/'/g, "\\'");
+                            html += '<tr style="border-bottom:1px solid #f3f4f6;cursor:pointer;transition:background 0.15s;" onmouseover="this.style.background=\'#f0f9ff\'" onmouseout="this.style.background=\'transparent\'" onclick="window.__soApp.filterByBucket(\'' + safeKunnrBucket + '\',\'' + categories[ei].label + '\')">';
                             html += '<td style="padding:4px 6px;"><span style="display:inline-flex;align-items:center;gap:4px;"><span style="width:8px;height:8px;border-radius:2px;background:' + categories[ei].color + ';display:inline-block;"></span><span style="font-weight:700;font-size:12px;color:#1f2937;">' + categories[ei].label + '</span><span style="color:#6b7280;font-size:10px;">(' + categories[ei].name + ')</span></span></td>';
                             html += '<td style="padding:4px 6px;text-align:center;font-weight:600;">' + c.bucketSO[ei].size + '</td>';
                             html += '<td style="padding:4px 6px;text-align:center;font-weight:600;color:#e65100;">' + c.bucketOtsDO[ei].size + '</td>';
@@ -518,7 +574,7 @@ sap.ui.define([
                     }
                     var totalSO = new Set();
                     var totalOtsDOSet = new Set();
-                    for (var si = 0; si < 5; si++) {
+                    for (var si = 0; si < 6; si++) {
                         c.bucketSO[si].forEach(function(v){ totalSO.add(v); });
                         c.bucketOtsDO[si].forEach(function(v){ totalOtsDOSet.add(v); });
                     }
@@ -666,20 +722,67 @@ sap.ui.define([
         },
 
         onStatusFilterChange: function (oEvent) {
-            this._statusFilter = oEvent.getParameter("selectedItem").getKey();
-            this._applyFilters();
-        },
-
-        onMonthFilterChange: function (oEvent) {
-            this._monthFilter = oEvent.getParameter("selectedItem").getKey();
+            this._statusFilter = oEvent.getSource().getSelectedKey();
             this._applyFilters();
             this._updateAgingAnalysis();
         },
 
-        _matchMonthFilter: function (orderDate, monthKey) {
-            if (!monthKey || monthKey === "ALL") return true;
-            if (!orderDate) return false;
-            return orderDate.getMonth() === parseInt(monthKey, 10);
+        onMonthFilterChange: function (oEvent) {
+            this._monthFilter = oEvent.getSource().getSelectedKey();
+            this._applyFilters();
+            this._updateAgingAnalysis();
+        },
+
+        onProjectionFilterChange: function (oEvent) {
+            var key = oEvent.getSource().getSelectedKey();
+            this._projectionFilter = (key === "ALL") ? "ALL" : parseInt(key, 10);
+            this._applyFilters();
+            this._updateAgingAnalysis();
+        },
+
+        _getDeliveryEndDate: function () {
+            // Both "ALL" = no delivery filter at all
+            if (this._monthFilter === "ALL" && this._projectionFilter === "ALL") return null;
+            var baseMonth = (this._monthFilter === "ALL") ? new Date().getMonth() : parseInt(this._monthFilter, 10);
+            var projection = (this._projectionFilter === "ALL") ? 0 : (this._projectionFilter || 0);
+            // If month selected but projection ALL = no upper limit
+            if (this._projectionFilter === "ALL" && this._monthFilter !== "ALL") {
+                return null;
+            }
+            // If projection selected but month ALL = use current month as base
+            var targetMonth = baseMonth + projection;
+            var targetYear = new Date().getFullYear();
+            while (targetMonth > 11) {
+                targetMonth -= 12;
+                targetYear++;
+            }
+            return new Date(targetYear, targetMonth + 1, 0, 23, 59, 59);
+        },
+
+        _matchMonthFilter: function (deliveryDate, monthKey) {
+            if (!monthKey) return true;
+            var endDate = this._getDeliveryEndDate();
+            if (!endDate) return true;
+            // SO tanpa delivery date tetap tampil
+            if (!deliveryDate) return true;
+            return deliveryDate <= endDate;
+        },
+
+        _populateMonthFilter: function () {
+            var monthNames = ["January", "February", "March", "April", "May", "June",
+                              "July", "August", "September", "October", "November", "December"];
+            var currentMonth = new Date().getMonth();
+
+            var sel = this.byId("monthFilter");
+            if (!sel) return;
+            sel.removeAllItems();
+            sel.addItem(new sap.ui.core.Item({ key: "ALL", text: "All" }));
+            for (var i = currentMonth; i >= 0; i--) {
+                sel.addItem(new sap.ui.core.Item({ key: String(i), text: monthNames[i] }));
+            }
+            // Default: Semua (tampilkan semua outstanding)
+            this._monthFilter = "ALL";
+            sel.setSelectedKey("ALL");
         },
 
         _applyFilters: function () {
@@ -698,11 +801,14 @@ sap.ui.define([
                     || r.matnr.toLowerCase().includes(q)
                     || (r.bstnk && r.bstnk.toLowerCase().includes(q));
                 var matchStatus = !statusFilter || statusFilter === "ALL" || r.status === statusFilter;
-                var matchMonth = that._matchMonthFilter(r.orderDate, monthFilter);
+                var matchMonth = that._matchMonthFilter(r.deliveryDate, monthFilter);
                 return matchCust && matchSearch && matchStatus && matchMonth;
             });
 
             filtered.sort(function(a, b) {
+                // Urutkan by customer dulu, lalu paling tua (daysLeft terbesar)
+                var custCmp = (a.customer || "").localeCompare(b.customer || "");
+                if (custCmp !== 0) return custCmp;
                 return (b.daysLeft || 0) - (a.daysLeft || 0);
             });
 
@@ -711,9 +817,71 @@ sap.ui.define([
                 item.showCustomerBelow = showCust;
             });
 
+            this._filteredData = filtered;
+            this._currentPage = 1;
             this.getView().getModel().setProperty("/results", filtered);
+            this._renderPage();
+        },
+
+        _renderPage: function () {
+            var data = this._filteredData;
+            var totalPages = Math.ceil(data.length / this._pageSize) || 1;
+            if (this._currentPage > totalPages) this._currentPage = totalPages;
+            var start = (this._currentPage - 1) * this._pageSize;
+            var paged = data.slice(start, start + this._pageSize);
+
+            this.getView().getModel().setProperty("/resultsPaged", paged);
+
             var rowEl = this.byId("rowCount");
-            if (rowEl) rowEl.setText(filtered.length + " rows");
+            if (rowEl) rowEl.setText(data.length + " rows");
+
+            this._renderPagination(totalPages);
+        },
+
+        _renderPagination: function (totalPages) {
+            var current = this._currentPage;
+            if (totalPages <= 1) {
+                var el = this.byId("paginationHtml");
+                if (el) {
+                    el.setProperty("content", '<div></div>', true);
+                    var d = el.getDomRef(); if (d) d.innerHTML = '';
+                }
+                return;
+            }
+
+            var html = '<div class="paginationBar">';
+            html += '<button class="pgBtn" onclick="window.__soApp.goToPage(1)"' + (current === 1 ? ' disabled' : '') + '>&laquo;</button>';
+            html += '<button class="pgBtn" onclick="window.__soApp.goToPage(' + (current - 1) + ')"' + (current === 1 ? ' disabled' : '') + '>&lsaquo;</button>';
+
+            var startP = Math.max(1, current - 2);
+            var endP = Math.min(totalPages, current + 2);
+            for (var i = startP; i <= endP; i++) {
+                html += '<button class="pgBtn' + (i === current ? ' pgActive' : '') + '" onclick="window.__soApp.goToPage(' + i + ')">' + i + '</button>';
+            }
+
+            html += '<button class="pgBtn" onclick="window.__soApp.goToPage(' + (current + 1) + ')"' + (current === totalPages ? ' disabled' : '') + '>&rsaquo;</button>';
+            html += '<button class="pgBtn" onclick="window.__soApp.goToPage(' + totalPages + ')"' + (current === totalPages ? ' disabled' : '') + '>&raquo;</button>';
+            html += '<span class="pgInfo">Page ' + current + ' / ' + totalPages + '</span>';
+            html += '</div>';
+
+            var el = this.byId("paginationHtml");
+            if (el) {
+                el.setProperty("content", html, true);
+                var domRef = el.getDomRef();
+                if (domRef) domRef.innerHTML = html;
+            }
+        },
+
+        goToPage: function (page) {
+            var totalPages = Math.ceil(this._filteredData.length / this._pageSize) || 1;
+            if (page < 1) page = 1;
+            if (page > totalPages) page = totalPages;
+            this._currentPage = page;
+            this._renderPage();
+
+            // Scroll ke atas tabel
+            var scrollEl = document.getElementById("soScrollContainer");
+            if (scrollEl) scrollEl.scrollTop = 0;
         },
 
         _getActiveData: function () {
@@ -732,11 +900,14 @@ sap.ui.define([
                     || r.matnr.toLowerCase().includes(q)
                     || (r.bstnk && r.bstnk.toLowerCase().includes(q));
                 var matchStatus = !statusFilter || statusFilter === "ALL" || r.status === statusFilter;
-                var matchMonth = that._matchMonthFilter(r.orderDate, monthFilter);
+                var matchMonth = that._matchMonthFilter(r.deliveryDate, monthFilter);
                 return matchCust && matchSearch && matchStatus && matchMonth;
             });
 
             filtered.sort(function(a, b) {
+                // Urutkan by customer dulu, lalu paling tua (daysLeft terbesar)
+                var custCmp = (a.customer || "").localeCompare(b.customer || "");
+                if (custCmp !== 0) return custCmp;
                 return (b.daysLeft || 0) - (a.daysLeft || 0);
             });
 
@@ -964,12 +1135,13 @@ sap.ui.define([
             var statusClass = "";
             var statusText  = "";
             switch (status) {
+                case "New": statusClass = "statusNew"; statusText = "🆕 New"; break;
                 case "Pending": statusClass = "statusPending"; statusText = "Pending"; break;
                 case "Low": statusClass = "statusLow"; statusText = "Low"; break;
                 case "Medium": statusClass = "statusMedium"; statusText = "Medium"; break;
                 case "Warning": statusClass = "statusWarning"; statusText = "⚠️ Warning"; break;
                 case "Prioritas": statusClass = "statusPrioritas"; statusText = "🔥 Prioritas"; break;
-                default: statusClass = "statusNone"; statusText = "-";
+                default: statusClass = "statusNew"; statusText = "🆕 New";
             }
             return '<span class="statusCell ' + statusClass + '">' + statusText + '</span>';
         },
@@ -1037,7 +1209,8 @@ sap.ui.define([
                 }
             }
 
-            if (lowerInput.includes("pending")) filters.status = "Pending";
+            if (lowerInput.includes("new")) filters.status = "New";
+            else if (lowerInput.includes("pending")) filters.status = "Pending";
             else if (lowerInput.includes("low")) filters.status = "Low";
             else if (lowerInput.includes("medium")) filters.status = "Medium";
             else if (lowerInput.includes("warning")) filters.status = "Warning";
@@ -1065,7 +1238,7 @@ sap.ui.define([
             var filtered = data.filter(function(item) {
                 if (filters.customer && !item.customer.toLowerCase().includes(filters.customer)) return false;
                 if (filters.status && item.status !== filters.status) return false;
-                if (filters.statusOutstanding && (item.status === "None" || item.status === "Pending")) return false;
+                if (filters.statusOutstanding && (item.status === "New" || item.status === "Pending")) return false;
                 if (filters.startDate && item.orderDate) {
                     var d = new Date(item.orderDate.getFullYear(), item.orderDate.getMonth(), item.orderDate.getDate());
                     if (d < filters.startDate) return false;
