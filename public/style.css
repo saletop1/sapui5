@@ -405,6 +405,30 @@ html, body {
     box-shadow: var(--shadow-lg);
 }
 
+/* ===== FILTER BAR ===== */
+.filterBar {
+    padding: 8px 12px !important;
+    gap: 8px !important;
+    background: var(--bg-glass-solid);
+    border-bottom: 1px solid var(--border-light);
+    flex-wrap: wrap !important;
+}
+.filterLabel {
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    color: var(--text-muted) !important;
+    white-space: nowrap;
+}
+.filterSelect {
+    min-width: 95px !important;
+}
+.filterSearchField {
+    min-width: 140px !important;
+}
+.filterBtn {
+    white-space: nowrap;
+}
+
 /* ===== TWO-PANEL LAYOUT ===== */
 .twoPanelRow {
     flex-wrap: nowrap !important;
@@ -464,6 +488,13 @@ html, body {
     /* Aging cards */
     .aging-card { padding: 10px; margin-bottom: 8px; }
 
+    /* Filter bar mobile */
+    .filterBar { padding: 6px 8px !important; gap: 4px 6px !important; }
+    .filterLabel { display: none !important; }
+    .filterSelect { min-width: 75px !important; flex: 1 1 auto !important; }
+    .filterSearchField { flex: 1 1 100% !important; min-width: 0 !important; }
+    .filterBtn .sapMBtnContent .sapMBtnText { display: none !important; }
+
     /* Detail SO */
     .soScrollContainer { height: 350px !important; }
     .sapMTableRowCell { font-size: 11px !important; padding: 4px 5px !important; }
@@ -471,9 +502,6 @@ html, body {
     /* Table: allow horizontal scroll */
     .soScrollContainer { overflow-x: auto !important; }
     #soTable { min-width: 900px; }
-
-    /* Search field */
-    .sapMSF { width: 150px !important; }
 
     /* Pagination */
     .paginationBar { gap: 2px; padding: 8px 0; }
@@ -510,21 +538,13 @@ html, body {
 
     /* Header: minimal */
     .sapMBar .sapMBarLeft .sapMTitle { font-size: 12px !important; }
-    .sapMBar .sapMBarRight > *:not(#themeToggle) { font-size: 9px !important; }
 
     /* Panels */
     #custScrollContainer { height: 200px !important; }
     .soScrollContainer { height: 300px !important; }
 
-    /* Toolbar labels hide on small screen */
-    .sapMPanel .sapMTB .sapMLabel { display: none !important; }
-
-    /* Select smaller */
-    .sapMPanel .sapMTB .sapMSlt { width: 90px !important; }
-    .sapMSF { width: 120px !important; }
-
-    /* Export buttons: icon only */
-    .sapMPanel .sapMTB .sapMBtn .sapMBtnContent .sapMBtnText { display: none !important; }
+    /* Filter: even smaller */
+    .filterSelect { min-width: 65px !important; font-size: 11px !important; }
 }
 
 /* ===== SCROLLBAR ===== */

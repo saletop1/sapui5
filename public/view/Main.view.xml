@@ -62,40 +62,37 @@
                 <!-- Detail SO Panel -->
                 <Panel>
                     <headerToolbar>
-                        <OverflowToolbar>
+                        <Toolbar>
                             <core:HTML id="selectedBadge" content="&lt;span&gt;&lt;/span&gt;"/>
-                            <Label text="Status:" labelFor="statusFilter" class="sapUiSmallMarginBegin"/>
-                            <Select id="statusFilter" selectedKey="ALL" width="120px" change="onStatusFilterChange" class="sapUiTinyMarginEnd">
-                                <items>
-                                    <core:ListItem key="ALL" text="All Status"/>
-                                    <core:ListItem key="New" text="New"/>
-                                    <core:ListItem key="Pending" text="Pending"/>
-                                    <core:ListItem key="Low" text="Low"/>
-                                    <core:ListItem key="Medium" text="Medium"/>
-                                    <core:ListItem key="Warning" text="Warning"/>
-                                    <core:ListItem key="Prioritas" text="Prioritas"/>
-                                </items>
-                            </Select>
-                            <Label text="Delivery:" labelFor="monthFilter" class="sapUiSmallMarginBegin"/>
-                            <Select id="monthFilter" width="130px" change="onMonthFilterChange" class="sapUiTinyMarginEnd">
-                                <items/>
-                            </Select>
-                            <Select id="projectionFilter" selectedKey="ALL" width="120px" change="onProjectionFilterChange" class="sapUiTinyMarginEnd">
-                                <items>
-                                    <core:ListItem key="ALL" text="All"/>
-                                    <core:ListItem key="0" text="This Month"/>
-                                    <core:ListItem key="1" text="+1 Month"/>
-                                    <core:ListItem key="2" text="+2 Months"/>
-                                    <core:ListItem key="3" text="+3 Months"/>
-                                </items>
-                            </Select>
                             <ToolbarSpacer/>
-                            <SearchField id="searchField" width="220px" liveChange="onSearch" placeholder="Search SO, customer, material..."/>
-                            <Text id="rowCount" text="–" class="sapUiSmallMarginBegin rowCountText"/>
-                            <Button icon="sap-icon://excel-attachment" text="Excel" type="Default" press="onExportExcel" class="sapUiSmallMarginBegin"/>
-                            <Button icon="sap-icon://pdf-attachment" text="PDF" type="Default" press="onExportPdf" class="sapUiTinyMarginBegin"/>
-                        </OverflowToolbar>
+                            <Text id="rowCount" text="–" class="rowCountText"/>
+                        </Toolbar>
                     </headerToolbar>
+                    <HBox class="filterBar" alignItems="Center" wrap="Wrap">
+                        <Label text="Status:" class="filterLabel"/>
+                        <Select id="statusFilter" selectedKey="ALL" change="onStatusFilterChange" class="filterSelect">
+                            <items>
+                                <core:ListItem key="ALL" text="All Status"/>
+                                <core:ListItem key="New" text="New"/>
+                                <core:ListItem key="Pending" text="Pending"/>
+                                <core:ListItem key="Low" text="Low"/>
+                                <core:ListItem key="Medium" text="Medium"/>
+                                <core:ListItem key="Warning" text="Warning"/>
+                                <core:ListItem key="Prioritas" text="Prioritas"/>
+                            </items>
+                        </Select>
+                        <Label text="Delivery:" class="filterLabel"/>
+                        <Select id="monthFilter" change="onMonthFilterChange" class="filterSelect">
+                            <items/>
+                        </Select>
+                        <Label text="Req. Delivery:" class="filterLabel"/>
+                        <Select id="reqDeliveryFilter" selectedKey="ALL" change="onReqDeliveryFilterChange" class="filterSelect">
+                            <items/>
+                        </Select>
+                        <SearchField id="searchField" width="180px" liveChange="onSearch" placeholder="Search SO, customer..." class="filterSearchField"/>
+                        <Button icon="sap-icon://excel-attachment" text="Excel" type="Default" press="onExportExcel" class="filterBtn"/>
+                        <Button icon="sap-icon://pdf-attachment" text="PDF" type="Default" press="onExportPdf" class="filterBtn"/>
+                    </HBox>
                     <VBox id="soScrollContainer" class="soScrollContainer">
                         <Table id="soTable" items="{/resultsPaged}" noDataText="Click a customer above or adjust filters to see SO details" alternateRowColors="true" sticky="ColumnHeaders">
                             <!-- columns dan items sama seperti sebelumnya -->

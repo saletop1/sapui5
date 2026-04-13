@@ -32,7 +32,7 @@ sap.ui.define([
             this._dataLoaded      = false;
             this._statusFilter    = "ALL";
             this._monthFilter     = "ALL";
-            this._projectionFilter = "ALL";
+            this._reqDeliveryFilter = "ALL";
             this._expandedCustomers = {};
             this._updating        = false;
             this._currentPage     = 1;
@@ -99,7 +99,7 @@ sap.ui.define([
             this._searchQuery   = "";
             this._statusFilter  = "ALL";
             this._monthFilter   = "ALL";
-            this._projectionFilter = "ALL";
+            this._reqDeliveryFilter = "ALL";
             this._expandedCustomers = {};
 
             var sf = this.byId("searchField");
@@ -108,8 +108,8 @@ sap.ui.define([
             if (statusCombo) statusCombo.setSelectedKey("ALL");
             var monthCombo = this.byId("monthFilter");
             if (monthCombo) monthCombo.setSelectedKey("ALL");
-            var projCombo = this.byId("projectionFilter");
-            if (projCombo) projCombo.setSelectedKey("ALL");
+            var reqDelCombo = this.byId("reqDeliveryFilter");
+            if (reqDelCombo) reqDelCombo.setSelectedKey("ALL");
 
             this._updateSelectedBadge();
 
@@ -276,6 +276,7 @@ sap.ui.define([
                     var savedScroll = isFirstLoad ? 0 : (scrollEl.scrollTop || 0);
 
                     that._populateMonthFilter();
+                    that._populateReqDeliveryFilter();
                     that._updateKPI();
                     that._buildCustTable();
                     that._applyFilters();
@@ -410,7 +411,8 @@ sap.ui.define([
                     || (r.bstnk && r.bstnk.toLowerCase().includes(q));
                 var matchStatus = !statusFilter || statusFilter === "ALL" || r.status === statusFilter;
                 var matchMonth = that._matchMonthFilter(r.deliveryDate, monthFilter);
-                return matchCust && matchSearch && matchStatus && matchMonth;
+                var matchReqDel = that._matchReqDeliveryFilter(r.deliveryDate);
+                return matchCust && matchSearch && matchStatus && matchMonth && matchReqDel;
             });
 
             var categories = [
@@ -717,8 +719,27 @@ sap.ui.define([
         },
 
         onSearch: function (oEvent) {
-            this._searchQuery = oEvent.getSource().getValue().toLowerCase();
-            this._applyFilters();
+            var that = this;
+            var val = oEvent.getSource().getValue();
+            this._searchQuery = val.toLowerCase();
+
+            if (this._searchTimer) clearTimeout(this._searchTimer);
+            this._searchTimer = setTimeout(function () {
+                that._applyFilters();
+                // Restore focus ke search field setelah render
+                setTimeout(function () {
+                    var sf = that.byId("searchField");
+                    if (sf) {
+                        sf.focus();
+                        // Set cursor ke akhir teks
+                        var dom = sf.$().find("input")[0];
+                        if (dom) {
+                            var len = dom.value.length;
+                            dom.setSelectionRange(len, len);
+                        }
+                    }
+                }, 50);
+            }, 300);
         },
 
         onStatusFilterChange: function (oEvent) {
@@ -733,37 +754,51 @@ sap.ui.define([
             this._updateAgingAnalysis();
         },
 
-        onProjectionFilterChange: function (oEvent) {
-            var key = oEvent.getSource().getSelectedKey();
-            this._projectionFilter = (key === "ALL") ? "ALL" : parseInt(key, 10);
+        onReqDeliveryFilterChange: function (oEvent) {
+            this._reqDeliveryFilter = oEvent.getSource().getSelectedKey();
             this._applyFilters();
             this._updateAgingAnalysis();
         },
 
-        _getDeliveryEndDate: function () {
-            // Both "ALL" = no delivery filter at all
-            if (this._monthFilter === "ALL" && this._projectionFilter === "ALL") return null;
-            var baseMonth = (this._monthFilter === "ALL") ? new Date().getMonth() : parseInt(this._monthFilter, 10);
-            var projection = (this._projectionFilter === "ALL") ? 0 : (this._projectionFilter || 0);
-            // If month selected but projection ALL = no upper limit
-            if (this._projectionFilter === "ALL" && this._monthFilter !== "ALL") {
-                return null;
-            }
-            // If projection selected but month ALL = use current month as base
-            var targetMonth = baseMonth + projection;
-            var targetYear = new Date().getFullYear();
-            while (targetMonth > 11) {
-                targetMonth -= 12;
-                targetYear++;
-            }
-            return new Date(targetYear, targetMonth + 1, 0, 23, 59, 59);
+        _matchReqDeliveryFilter: function (deliveryDate) {
+            var filter = this._reqDeliveryFilter;
+            if (!filter || filter === "ALL") return true;
+            if (!deliveryDate) return false;
+            var dd = new Date(deliveryDate);
+            // filter key = "0" (Jan), "1" (Feb), ... "11" (Dec)
+            var filterMonth = parseInt(filter, 10);
+            return dd.getMonth() === filterMonth;
+        },
+
+        _populateReqDeliveryFilter: function () {
+            var monthNames = ["January", "February", "March", "April", "May", "June",
+                              "July", "August", "September", "October", "November", "December"];
+            // Kumpulkan bulan unik dari delivery dates yang ada di data
+            var monthSet = new Set();
+            this._allData.forEach(function (r) {
+                if (r.deliveryDate) {
+                    monthSet.add(r.deliveryDate.getMonth());
+                }
+            });
+            var months = Array.from(monthSet).sort(function (a, b) { return a - b; });
+
+            var sel = this.byId("reqDeliveryFilter");
+            if (!sel) return;
+            sel.removeAllItems();
+            sel.addItem(new sap.ui.core.Item({ key: "ALL", text: "All" }));
+            months.forEach(function (m) {
+                sel.addItem(new sap.ui.core.Item({ key: String(m), text: monthNames[m] }));
+            });
+            this._reqDeliveryFilter = "ALL";
+            sel.setSelectedKey("ALL");
         },
 
         _matchMonthFilter: function (deliveryDate, monthKey) {
-            if (!monthKey) return true;
-            var endDate = this._getDeliveryEndDate();
-            if (!endDate) return true;
-            // SO tanpa delivery date tetap tampil
+            if (!monthKey || monthKey === "ALL") return true;
+            // Filter berdasarkan bulan order dibuat (kumulatif s/d bulan terpilih)
+            var selectedMonth = parseInt(monthKey, 10);
+            var currentYear = new Date().getFullYear();
+            var endDate = new Date(currentYear, selectedMonth + 1, 0, 23, 59, 59);
             if (!deliveryDate) return true;
             return deliveryDate <= endDate;
         },
@@ -771,16 +806,14 @@ sap.ui.define([
         _populateMonthFilter: function () {
             var monthNames = ["January", "February", "March", "April", "May", "June",
                               "July", "August", "September", "October", "November", "December"];
-            var currentMonth = new Date().getMonth();
 
             var sel = this.byId("monthFilter");
             if (!sel) return;
             sel.removeAllItems();
             sel.addItem(new sap.ui.core.Item({ key: "ALL", text: "All" }));
-            for (var i = currentMonth; i >= 0; i--) {
+            for (var i = 0; i < 12; i++) {
                 sel.addItem(new sap.ui.core.Item({ key: String(i), text: monthNames[i] }));
             }
-            // Default: Semua (tampilkan semua outstanding)
             this._monthFilter = "ALL";
             sel.setSelectedKey("ALL");
         },
@@ -802,7 +835,8 @@ sap.ui.define([
                     || (r.bstnk && r.bstnk.toLowerCase().includes(q));
                 var matchStatus = !statusFilter || statusFilter === "ALL" || r.status === statusFilter;
                 var matchMonth = that._matchMonthFilter(r.deliveryDate, monthFilter);
-                return matchCust && matchSearch && matchStatus && matchMonth;
+                var matchReqDel = that._matchReqDeliveryFilter(r.deliveryDate);
+                return matchCust && matchSearch && matchStatus && matchMonth && matchReqDel;
             });
 
             filtered.sort(function(a, b) {
@@ -901,7 +935,8 @@ sap.ui.define([
                     || (r.bstnk && r.bstnk.toLowerCase().includes(q));
                 var matchStatus = !statusFilter || statusFilter === "ALL" || r.status === statusFilter;
                 var matchMonth = that._matchMonthFilter(r.deliveryDate, monthFilter);
-                return matchCust && matchSearch && matchStatus && matchMonth;
+                var matchReqDel = that._matchReqDeliveryFilter(r.deliveryDate);
+                return matchCust && matchSearch && matchStatus && matchMonth && matchReqDel;
             });
 
             filtered.sort(function(a, b) {
