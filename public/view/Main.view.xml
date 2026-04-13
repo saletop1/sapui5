@@ -68,31 +68,35 @@
                             <Text id="rowCount" text="–" class="rowCountText"/>
                         </Toolbar>
                     </headerToolbar>
-                    <HBox class="filterBar" alignItems="Center" wrap="Wrap">
-                        <Label text="Status:" class="filterLabel"/>
-                        <Select id="statusFilter" selectedKey="ALL" change="onStatusFilterChange" class="filterSelect">
-                            <items>
-                                <core:ListItem key="ALL" text="All Status"/>
-                                <core:ListItem key="New" text="New"/>
-                                <core:ListItem key="Pending" text="Pending"/>
-                                <core:ListItem key="Low" text="Low"/>
-                                <core:ListItem key="Medium" text="Medium"/>
-                                <core:ListItem key="Warning" text="Warning"/>
-                                <core:ListItem key="Prioritas" text="Prioritas"/>
-                            </items>
-                        </Select>
-                        <Label text="Delivery:" class="filterLabel"/>
-                        <Select id="monthFilter" change="onMonthFilterChange" class="filterSelect">
-                            <items/>
-                        </Select>
-                        <Label text="Req. Delivery:" class="filterLabel"/>
-                        <Select id="reqDeliveryFilter" selectedKey="ALL" change="onReqDeliveryFilterChange" class="filterSelect">
-                            <items/>
-                        </Select>
-                        <SearchField id="searchField" width="180px" liveChange="onSearch" placeholder="Search SO, customer..." class="filterSearchField"/>
-                        <Button icon="sap-icon://excel-attachment" text="Excel" type="Default" press="onExportExcel" class="filterBtn"/>
-                        <Button icon="sap-icon://pdf-attachment" text="PDF" type="Default" press="onExportPdf" class="filterBtn"/>
-                    </HBox>
+                    <VBox class="filterBar">
+                        <HBox class="filterRowTop" alignItems="Center">
+                            <Label text="Status:" class="filterLabel"/>
+                            <Select id="statusFilter" selectedKey="ALL" change="onStatusFilterChange" class="filterSelect">
+                                <items>
+                                    <core:ListItem key="ALL" text="All Status"/>
+                                    <core:ListItem key="New" text="New"/>
+                                    <core:ListItem key="Pending" text="Pending"/>
+                                    <core:ListItem key="Low" text="Low"/>
+                                    <core:ListItem key="Medium" text="Medium"/>
+                                    <core:ListItem key="Warning" text="Warning"/>
+                                    <core:ListItem key="Prioritas" text="Prioritas"/>
+                                </items>
+                            </Select>
+                            <Label text="Delivery:" class="filterLabel"/>
+                            <Select id="monthFilter" change="onMonthFilterChange" class="filterSelect">
+                                <items/>
+                            </Select>
+                            <Label text="Req. Delivery:" class="filterLabel"/>
+                            <Select id="reqDeliveryFilter" selectedKey="ALL" change="onReqDeliveryFilterChange" class="filterSelect">
+                                <items/>
+                            </Select>
+                        </HBox>
+                        <HBox class="filterRowBottom" alignItems="Center">
+                            <SearchField id="searchField" liveChange="onSearch" placeholder="Search SO, customer, material..." class="filterSearchField"/>
+                            <Button icon="sap-icon://excel-attachment" text="Excel" type="Default" press="onExportExcel" class="filterBtn"/>
+                            <Button icon="sap-icon://pdf-attachment" text="PDF" type="Default" press="onExportPdf" class="filterBtn"/>
+                        </HBox>
+                    </VBox>
                     <VBox id="soScrollContainer" class="soScrollContainer">
                         <Table id="soTable" items="{/resultsPaged}" noDataText="Click a customer above or adjust filters to see SO details" alternateRowColors="true" sticky="ColumnHeaders">
                             <!-- columns dan items sama seperti sebelumnya -->
