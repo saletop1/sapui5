@@ -64,12 +64,10 @@
                     <headerToolbar>
                         <Toolbar>
                             <core:HTML id="selectedBadge" content="&lt;span&gt;&lt;/span&gt;"/>
-                            <ToolbarSpacer/>
-                            <Text id="rowCount" text="–" class="rowCountText"/>
                         </Toolbar>
                     </headerToolbar>
-                    <VBox class="filterBar">
-                        <HBox class="filterRowTop" alignItems="Center">
+                    <VBox class="filterBarWrap">
+                        <HBox class="filterRow1" alignItems="Center">
                             <Label text="Status:" class="filterLabel"/>
                             <Select id="statusFilter" selectedKey="ALL" change="onStatusFilterChange" class="filterSelect">
                                 <items>
@@ -86,15 +84,16 @@
                             <Select id="monthFilter" change="onMonthFilterChange" class="filterSelect">
                                 <items/>
                             </Select>
-                            <Label text="Req. Delivery:" class="filterLabel"/>
+                            <Label text="Req. Del:" class="filterLabel"/>
                             <Select id="reqDeliveryFilter" selectedKey="ALL" change="onReqDeliveryFilterChange" class="filterSelect">
                                 <items/>
                             </Select>
                         </HBox>
-                        <HBox class="filterRowBottom" alignItems="Center">
-                            <SearchField id="searchField" liveChange="onSearch" placeholder="Search SO, customer, material..." class="filterSearchField"/>
+                        <HBox class="filterRow2" alignItems="Center">
+                            <SearchField id="searchField" liveChange="onSearch" placeholder="Search SO, customer..." class="filterSearchField"/>
                             <Button icon="sap-icon://excel-attachment" text="Excel" type="Default" press="onExportExcel" class="filterBtn"/>
                             <Button icon="sap-icon://pdf-attachment" text="PDF" type="Default" press="onExportPdf" class="filterBtn"/>
+                            <Text id="rowCount" text="–" class="rowCountText"/>
                         </HBox>
                     </VBox>
                     <VBox id="soScrollContainer" class="soScrollContainer">

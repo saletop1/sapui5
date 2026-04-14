@@ -474,13 +474,13 @@ sap.ui.define([
                 }
             });
 
-            // Summary header
-            var html = '<div style="margin-bottom:10px;padding:10px 12px;background:linear-gradient(135deg,#f0fdf4,#ecfdf5);border-radius:10px;border:1px solid #bbf7d0;">';
+            // Summary header (sticky)
+            var html = '<div class="agingSummary">';
             html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">';
             html += '<span style="font-weight:700;font-size:13px;color:#166534;">Total: ' + that._usdNoDecimal(grandTotal) + '</span>';
-            html += '<span style="font-size:11px;color:#6b7280;">' + custList.length + ' customers · ' + filtered.length + ' lines</span>';
+            html += '<span style="font-size:11px;color:var(--text-muted);">' + custList.length + ' customers · ' + filtered.length + ' lines</span>';
             html += '</div>';
-            html += '<div style="display:flex;height:8px;border-radius:99px;overflow:hidden;background:#e5e7eb;">';
+            html += '<div style="display:flex;height:8px;border-radius:99px;overflow:hidden;background:var(--border-light);">';
             for (var gi = 0; gi < categories.length; gi++) {
                 var gp = grandTotal > 0 ? (grandBuckets[gi] / grandTotal * 100) : 0;
                 if (gp > 0) {
@@ -490,7 +490,7 @@ sap.ui.define([
             html += '</div>';
             html += '<div style="display:flex;gap:8px;margin-top:6px;flex-wrap:wrap;">';
             for (var li = 0; li < categories.length; li++) {
-                html += '<span style="font-size:9px;color:#6b7280;display:flex;align-items:center;gap:3px;">';
+                html += '<span style="font-size:9px;color:var(--text-muted);display:flex;align-items:center;gap:3px;">';
                 html += '<span style="width:8px;height:8px;border-radius:2px;background:' + categories[li].color + ';display:inline-block;"></span>';
                 html += categories[li].label;
                 html += '</span>';
@@ -614,19 +614,20 @@ sap.ui.define([
             var that = this;
 
             this._allData.forEach(function (r) {
-                if (!C[r.kunnr]) C[r.kunnr] = { name: r.customer, v: 0, c: 0, qty: 0, soSet: new Set() };
+                if (!C[r.kunnr]) C[r.kunnr] = { name: r.customer, v: 0, c: 0, qty: 0, otsDO: 0, soSet: new Set() };
                 C[r.kunnr].v   += r.totalValue;
                 C[r.kunnr].c++;
                 C[r.kunnr].qty += r.quantity;
+                C[r.kunnr].otsDO += r.otsdo;
                 C[r.kunnr].soSet.add(r.vbeln);
             });
 
             var sorted = Object.entries(C).sort(function (a, b) { return b[1].v - a[1].v; });
 
-            var th = function (txt, right) {
+            var th = function (txt, align) {
                 return '<th style="padding:8px 10px;font-size:11px;font-weight:700;text-transform:uppercase;'
-                     + 'letter-spacing:.04em;color:#6b7280;border-bottom:1px solid #e5e7eb;'
-                     + 'text-align:' + (right ? "right" : "left") + '">' + txt + '</th>';
+                     + 'letter-spacing:.04em;color:var(--text-muted);border-bottom:1px solid var(--border-medium);'
+                     + 'text-align:' + (align || "left") + '">' + txt + '</th>';
             };
 
             var rows = sorted.map(function (e, i) {
@@ -638,21 +639,22 @@ sap.ui.define([
                 var rowClass = isActive ? 'active-row' : '';
 
                 return '<tr class="' + rowClass + '" onclick="window.__soApp.selectCustomer(\'' + safeKunnr + '\',\'' + safeName + '\')">'
-                     + '<td style="padding:8px 10px;font-size:12px;color:#9ca3af">' + (i + 1) + '</td>'
-                     + '<td style="padding:8px 10px;font-weight:600;font-size:13px;color:' + (isActive ? "#c8401a" : "#111827") + ';word-break:break-word;white-space:normal;">' + (isActive ? '▶ ' : '') + safeName + '</td>'
-                     + '<td style="padding:8px 10px;color:#6b7280;font-size:12px;text-align:right">' + Math.floor(d.qty).toLocaleString('en-US') + '</td>'
+                     + '<td style="padding:8px 10px;font-size:12px;color:var(--text-faint)">' + (i + 1) + '</td>'
+                     + '<td style="padding:8px 10px;font-weight:600;font-size:12px;color:' + (isActive ? "#c8401a" : "var(--text-primary)") + ';word-break:break-word;white-space:normal;">' + (isActive ? '▶ ' : '') + safeName + '</td>'
+                     + '<td style="padding:8px 10px;color:var(--text-muted);font-size:12px;text-align:right">' + Math.floor(d.qty).toLocaleString('en-US') + '</td>'
+                     + '<td style="padding:8px 10px;color:#e65100;font-size:12px;font-weight:600;text-align:right">' + Math.floor(d.otsDO).toLocaleString('en-US') + '</td>'
                      + '<td style="padding:8px 10px;font-size:12px;font-weight:700;text-align:center;color:#4f46e5">' + d.soSet.size + '</td>'
-                     + '<td style="padding:8px 10px;text-align:right;font-weight:700;font-size:13px;color:#111827">' + that._usdNoDecimal(d.v) + '</td>'
+                     + '<td style="padding:8px 10px;text-align:right;font-weight:700;font-size:12px;color:var(--text-primary)">' + that._usdNoDecimal(d.v) + '</td>'
                      + '</tr>';
             }).join("");
 
             var clearBtn = this._selectedKunnr
-                ? '<button onclick="window.__soApp.clearCustomer()" style="float:right;margin-bottom:6px;padding:3px 10px;font-size:11px;border:1px solid #d1d5db;border-radius:6px;background:#fff;cursor:pointer;color:#374151">✕ Show All</button>'
+                ? '<button onclick="window.__soApp.clearCustomer()" style="float:right;margin-bottom:6px;padding:3px 10px;font-size:11px;border:1px solid var(--border-medium);border-radius:6px;background:var(--bg-card);cursor:pointer;color:var(--text-secondary)">✕ Show All</button>'
                 : '';
 
             var html = '<div class="custTableContainer">' + clearBtn
                      + '<table class="custTable">'
-                     + '<thead><tr>' + th("#") + th("Customer") + th("Total Qty", true) + th("Total SO", true) + th("Value (USD)", true) + '</tr></thead>'
+                     + '<thead><tr>' + th("No") + th("Customer") + th("Total Qty", "right") + th("Ots. DO", "right") + th("Ots. SO", "center") + th("Ots. SO Value", "right") + '</tr></thead>'
                      + '<tbody>' + rows + '</tbody>'
                      + '</table></div>';
             var custHtml = this.byId("custTableHtml");

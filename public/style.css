@@ -222,6 +222,26 @@ html, body {
 .dark-theme .kpiGrad4 .kpiCardValue { color: #c084fc; }
 
 /* ===== AGING ANALYSIS ===== */
+.agingSummary {
+    position: sticky;
+    top: 0;
+    z-index: 3;
+    margin-bottom: 10px;
+    padding: 10px 12px;
+    background: linear-gradient(135deg, rgba(240,253,244,0.95), rgba(236,253,245,0.95));
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-radius: 10px;
+    border: 1px solid #bbf7d0;
+    box-shadow: var(--shadow-sm);
+}
+.dark-theme .agingSummary {
+    background: linear-gradient(135deg, rgba(20,60,40,0.9), rgba(15,50,35,0.9));
+    border-color: rgba(34,197,94,0.25);
+}
+.dark-theme .agingSummary span[style*="color:#166534"] {
+    color: #4ade80 !important;
+}
 .aging-card {
     background: var(--bg-card);
     backdrop-filter: blur(var(--blur));
@@ -406,35 +426,53 @@ html, body {
 }
 
 /* ===== FILTER BAR ===== */
-.filterBar {
+.filterBarWrap {
     padding: 8px 12px !important;
-    gap: 6px !important;
     background: var(--bg-glass-solid);
     border-bottom: 1px solid var(--border-light);
+    gap: 0 !important;
+    /* Desktop: 1 row via flex-direction row */
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
 }
-.filterRowTop,
-.filterRowBottom {
+.filterRow1,
+.filterRow2 {
     gap: 8px !important;
-    width: 100%;
+    flex-shrink: 0;
+    align-items: center !important;
 }
-.filterRowTop {
-    flex-wrap: wrap !important;
+.filterRow1 {
+    flex: 0 0 auto;
+    margin-right: 8px;
+}
+.filterRow2 {
+    flex: 1 1 auto;
 }
 .filterLabel {
     font-size: 11px !important;
     font-weight: 600 !important;
     color: var(--text-muted) !important;
     white-space: nowrap;
+    flex-shrink: 0;
 }
 .filterSelect {
     min-width: 95px !important;
+    flex-shrink: 1;
 }
 .filterSearchField {
     flex: 1 !important;
-    min-width: 120px !important;
+    min-width: 100px !important;
 }
 .filterBtn {
     white-space: nowrap;
+    flex-shrink: 0;
+}
+.rowCountText {
+    font-size: 11px !important;
+    color: var(--text-muted) !important;
+    white-space: nowrap !important;
+    flex-shrink: 0;
 }
 
 /* ===== TWO-PANEL LAYOUT ===== */
@@ -496,14 +534,30 @@ html, body {
     /* Aging cards */
     .aging-card { padding: 10px; margin-bottom: 8px; }
 
-    /* Filter bar mobile */
-    .filterBar { padding: 6px 8px !important; gap: 4px !important; }
-    .filterRowTop,
-    .filterRowBottom { gap: 4px !important; }
+    /* Filter bar mobile: stack to 2 rows */
+    .filterBarWrap {
+        flex-direction: column !important;
+        gap: 6px !important;
+        padding: 8px !important;
+    }
+    .filterRow1,
+    .filterRow2 {
+        width: 100% !important;
+        margin-right: 0 !important;
+    }
+    .filterRow1 { gap: 6px !important; }
+    .filterRow2 { gap: 6px !important; }
     .filterLabel { display: none !important; }
-    .filterSelect { min-width: 0 !important; flex: 1 1 0% !important; }
-    .filterSearchField { flex: 1 !important; min-width: 0 !important; }
+    .filterSelect {
+        min-width: 0 !important;
+        flex: 1 1 0% !important;
+    }
+    .filterSearchField {
+        flex: 1 !important;
+        min-width: 0 !important;
+    }
     .filterBtn .sapMBtnContent .sapMBtnText { display: none !important; }
+    .rowCountText { font-size: 10px !important; }
 
     /* Detail SO */
     .soScrollContainer { height: 350px !important; }
@@ -553,8 +607,9 @@ html, body {
     #custScrollContainer { height: 200px !important; }
     .soScrollContainer { height: 300px !important; }
 
-    /* Filter: even smaller */
-    .filterSelect { min-width: 65px !important; font-size: 11px !important; }
+    /* Filter: even smaller on tiny screens */
+    .filterRow1 { gap: 4px !important; }
+    .filterRow2 { gap: 4px !important; }
 }
 
 /* ===== SCROLLBAR ===== */
