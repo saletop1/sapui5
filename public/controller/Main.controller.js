@@ -82,12 +82,13 @@ sap.ui.define([
             var n = new Date();
             var dateTime = n.toLocaleDateString("en-US", { weekday: "short", day: "numeric", month: "short", year: "numeric" })
                 + " · " + n.toLocaleTimeString("en-US", { hour12: false });
+            var dateOnly = n.toLocaleDateString("en-US", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
 
             var el = this.byId("clockText");
             if (el) el.setText(dateTime);
 
             var footerClock = this.byId("footerClock");
-            if (footerClock) footerClock.setText(dateTime);
+            if (footerClock) footerClock.setText(dateOnly);
         },
 
         onSourceChange: function (oEvent) {
