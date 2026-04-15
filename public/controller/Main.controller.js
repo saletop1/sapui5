@@ -1150,8 +1150,10 @@ sap.ui.define([
                     body: rows,
                     margin: { left: 10, right: 10 },
                     tableWidth: doc.internal.pageSize.getWidth() - 20,
-                    styles: { fontSize: 7, cellPadding: 1.5, overflow: 'linebreak', textColor: [0,0,0], halign: 'center' },
-                    headStyles: { fillColor: [134, 179, 130], textColor: 255, fontStyle: "bold", fontSize: 7, halign: 'center' },
+                    rowPageBreak: 'avoid',
+                    pageBreak: 'auto',
+                    styles: { fontSize: 7, cellPadding: 1.5, overflow: 'linebreak', textColor: [0,0,0], halign: 'center', valign: 'middle' },
+                    headStyles: { fillColor: [134, 179, 130], textColor: 255, fontStyle: "bold", fontSize: 7, halign: 'center', valign: 'middle' },
                     alternateRowStyles: { fillColor: [240, 248, 240] },
                     columnStyles: {
                         0: { halign: "center", cellWidth: 8 },
