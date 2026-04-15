@@ -438,9 +438,9 @@ sap.ui.define([
                         count: 0,
                         buckets: [0, 0, 0, 0, 0, 0],
                         bucketQty: [0, 0, 0, 0, 0, 0],
+                        bucketOtsDOQty: [0, 0, 0, 0, 0, 0],
                         bucketCount: [0, 0, 0, 0, 0, 0],
-                        bucketSO: [new Set(), new Set(), new Set(), new Set(), new Set(), new Set()],
-                        bucketOtsDO: [new Set(), new Set(), new Set(), new Set(), new Set(), new Set()]
+                        bucketSO: [new Set(), new Set(), new Set(), new Set(), new Set(), new Set()]
                     });
                 }
                 var c = custMap.get(r.kunnr);
@@ -452,11 +452,9 @@ sap.ui.define([
                     if (r.daysLeft >= categories[i].min && r.daysLeft <= categories[i].max) {
                         c.buckets[i] += r.totalValue;
                         c.bucketQty[i] += r.quantity;
+                        c.bucketOtsDOQty[i] += r.otsdo;
                         c.bucketCount[i]++;
                         c.bucketSO[i].add(r.vbeln);
-                        if (r.otsdo > 0) {
-                            c.bucketOtsDO[i].add(r.vbeln);
-                        }
                         break;
                     }
                 }
@@ -559,9 +557,9 @@ sap.ui.define([
                     html += '<thead><tr style="border-bottom:1px solid #e5e7eb;">';
                     html += '<th style="text-align:left;padding:4px 6px;color:#6b7280;font-size:10px;font-weight:700;">Status</th>';
                     html += '<th style="text-align:center;padding:4px 6px;color:#6b7280;font-size:10px;font-weight:700;">SO</th>';
-                    html += '<th style="text-align:center;padding:4px 6px;color:#6b7280;font-size:10px;font-weight:700;">Ots DO</th>';
                     html += '<th style="text-align:right;padding:4px 6px;color:#6b7280;font-size:10px;font-weight:700;">Qty</th>';
-                    html += '<th style="text-align:right;padding:4px 6px;color:#6b7280;font-size:10px;font-weight:700;">Value</th>';
+                    html += '<th style="text-align:right;padding:4px 6px;color:#6b7280;font-size:10px;font-weight:700;">Ots DO</th>';
+                    html += '<th style="text-align:right;padding:4px 6px;color:#6b7280;font-size:10px;font-weight:700;">Ots. SO Value</th>';
                     html += '</tr></thead><tbody>';
                     for (var ei = 0; ei < categories.length; ei++) {
                         if (c.bucketCount[ei] > 0) {
@@ -569,23 +567,21 @@ sap.ui.define([
                             html += '<tr style="border-bottom:1px solid #f3f4f6;cursor:pointer;transition:background 0.15s;" onmouseover="this.style.background=\'#f0f9ff\'" onmouseout="this.style.background=\'transparent\'" onclick="window.__soApp.filterByBucket(\'' + safeKunnrBucket + '\',\'' + categories[ei].label + '\')">';
                             html += '<td style="padding:4px 6px;"><span style="display:inline-flex;align-items:center;gap:4px;"><span style="width:8px;height:8px;border-radius:2px;background:' + categories[ei].color + ';display:inline-block;"></span><span style="font-weight:700;font-size:12px;color:#1f2937;">' + categories[ei].label + '</span><span style="color:#6b7280;font-size:10px;">(' + categories[ei].name + ')</span></span></td>';
                             html += '<td style="padding:4px 6px;text-align:center;font-weight:600;">' + c.bucketSO[ei].size + '</td>';
-                            html += '<td style="padding:4px 6px;text-align:center;font-weight:600;color:#e65100;">' + c.bucketOtsDO[ei].size + '</td>';
                             html += '<td style="padding:4px 6px;text-align:right;">' + Math.floor(c.bucketQty[ei]).toLocaleString('en-US') + '</td>';
+                            html += '<td style="padding:4px 6px;text-align:right;font-weight:600;color:#e65100;">' + Math.floor(c.bucketOtsDOQty[ei]).toLocaleString('en-US') + '</td>';
                             html += '<td style="padding:4px 6px;text-align:right;font-weight:700;font-size:12px;color:#1f2937;">' + that._usdNoDecimal(c.buckets[ei]) + '</td>';
                             html += '</tr>';
                         }
                     }
                     var totalSO = new Set();
-                    var totalOtsDOSet = new Set();
                     for (var si = 0; si < 6; si++) {
                         c.bucketSO[si].forEach(function(v){ totalSO.add(v); });
-                        c.bucketOtsDO[si].forEach(function(v){ totalOtsDOSet.add(v); });
                     }
                     html += '<tr style="border-top:2px solid #d1d5db;background:#f9fafb;">';
                     html += '<td style="padding:4px 6px;font-weight:700;color:#374151;">Total</td>';
                     html += '<td style="padding:4px 6px;text-align:center;font-weight:700;">' + totalSO.size + '</td>';
-                    html += '<td style="padding:4px 6px;text-align:center;font-weight:700;color:#e65100;">' + totalOtsDOSet.size + '</td>';
                     html += '<td style="padding:4px 6px;text-align:right;font-weight:700;">' + Math.floor(c.totalQty).toLocaleString('en-US') + '</td>';
+                    html += '<td style="padding:4px 6px;text-align:right;font-weight:700;color:#e65100;">' + Math.floor(c.totalOtsDO).toLocaleString('en-US') + '</td>';
                     html += '<td style="padding:4px 6px;text-align:right;font-weight:700;color:#166534;">' + that._usdNoDecimal(c.totalValue) + '</td>';
                     html += '</tr>';
                     html += '</tbody></table>';
