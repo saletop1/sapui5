@@ -1003,23 +1003,28 @@ sap.ui.define([
                 var label    = that._selectedName ? that._selectedName : "All_Customers";
                 var fileName = "SO_" + cfg.label + "_" + label.replace(/\s+/g, "_") + "_" + that._dateStamp() + ".xlsx";
 
-                var wsData = [[
-                    "Sales Order (PO)", "Created Date", "Material", "Qty Order", "Shipped", "Ots. SO",
-                    "Ots. DO", "WHFG", "Packing", "Total Value (USD)", "Req. Delivery", "Days Running", "Status"
-                ]];
+                var headers = [
+                    "PO Number", "SO Number", "Customer", "Created Date",
+                    "Material Code", "Material Desc",
+                    "Qty Order", "Shipped", "Ots. SO", "Ots. DO", "WHFG", "Packing",
+                    "Ots. SO Value", "Req. Delivery", "Days Running", "Status"
+                ];
+                var wsData = [headers];
 
                 data.forEach(function (r) {
-                    var salesOrderText = (r.bstnk ? r.bstnk + " / " : "") + r.id;
                     wsData.push([
-                        salesOrderText,
+                        r.bstnk || "",
+                        r.id,
+                        r.customer,
                         r.orderDateFmt,
-                        r.matnr + " - " + r.item,
+                        r.matnr,
+                        r.item,
                         Math.floor(r.kwmeng),
                         Math.floor(r.qtyGi),
                         Math.floor(r.qtyBalance2),
                         Math.floor(r.otsdo),
-                        Math.floor(r.kalab).toString(),
-                        Math.floor(r.kalab2).toString(),
+                        Math.floor(r.kalab),
+                        Math.floor(r.kalab2),
                         r.totalValue,
                         r.deliveryDateFmt,
                         r.hariBerjalan,
@@ -1028,13 +1033,31 @@ sap.ui.define([
                 });
 
                 var tv = data.reduce(function (s, r) { return s + r.totalValue; }, 0);
-                wsData.push(["", "", "", "", "", "", "", "", "TOTAL", tv, "", "", ""]);
+                wsData.push(["", "", "", "", "", "", "", "", "", "", "", "TOTAL", tv, "", "", ""]);
 
                 var ws = XLSXLib.utils.aoa_to_sheet(wsData);
+
+                // Column widths
                 ws["!cols"] = [
-                    { wch: 25 }, { wch: 14 }, { wch: 35 }, { wch: 12 }, { wch: 12 }, { wch: 12 },
-                    { wch: 10 }, { wch: 12 }, { wch: 12 }, { wch: 18 }, { wch: 14 }, { wch: 12 }, { wch: 10 }
+                    { wch: 14 }, { wch: 20 }, { wch: 28 }, { wch: 14 },
+                    { wch: 18 }, { wch: 32 },
+                    { wch: 10 }, { wch: 10 }, { wch: 10 }, { wch: 10 }, { wch: 10 }, { wch: 10 },
+                    { wch: 16 }, { wch: 14 }, { wch: 12 }, { wch: 10 }
                 ];
+
+                // Center align headers & values for Qty/Shipped/Ots/WHFG/Packing (columns G-L = index 6-11)
+                var centerCols = [6, 7, 8, 9, 10, 11];
+                var range = XLSXLib.utils.decode_range(ws["!ref"]);
+                for (var R = range.s.r; R <= range.e.r; R++) {
+                    for (var ci = 0; ci < centerCols.length; ci++) {
+                        var C = centerCols[ci];
+                        var addr = XLSXLib.utils.encode_cell({ r: R, c: C });
+                        if (ws[addr]) {
+                            if (!ws[addr].s) ws[addr].s = {};
+                            ws[addr].s.alignment = { horizontal: "center" };
+                        }
+                    }
+                }
 
                 var wb = XLSXLib.utils.book_new();
                 XLSXLib.utils.book_append_sheet(wb, ws, "Sales Orders");

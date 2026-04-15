@@ -107,9 +107,9 @@
                                 <Column width="62px" hAlign="Center"><Text text="Shipped"/></Column>
                                 <Column width="62px" hAlign="Center"><Text text="Ots. SO"/></Column>
                                 <Column width="62px" hAlign="Center"><Text text="Ots. DO"/></Column>
-                                <Column width="55px" hAlign="Center"><Text text="WHFG"/></Column>
-                                <Column width="58px" hAlign="Center"><Text text="Packing"/></Column>
-                                <Column width="85px" hAlign="Center"><Text text="Total Value"/></Column>
+                                <Column width="55px" hAlign="Center"><Text text="Stock WHFG"/></Column>
+                                <Column width="58px" hAlign="Center"><Text text="Stock Pack"/></Column>
+                                <Column width="85px" hAlign="Center"><Text text="Ots. Value"/></Column>
                                 <Column width="88px" hAlign="Center"><Text text="Req. Delivery"/></Column>
                                 <Column width="80px" hAlign="Center"><Text text="Days Running"/></Column>
                                 <Column width="80px" hAlign="Center"><Text text="Status"/></Column>
