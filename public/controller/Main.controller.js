@@ -132,6 +132,14 @@ sap.ui.define([
             return "$" + num.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         },
 
+        _fmtPct: function (v) {
+            var num = Number(v || 0);
+            if (isNaN(num)) num = 0;
+            // Bulatkan max 2 desimal, hilangkan trailing zero: 100 → "100%", 34.56 → "34.56%", 34.5 → "34.5%"
+            var rounded = parseFloat(num.toFixed(2));
+            return rounded + "%";
+        },
+
         _intFmt: function (v) {
             var num = Number(v || 0);
             if (isNaN(num)) num = 0;
@@ -555,20 +563,26 @@ sap.ui.define([
                     html += '<div style="max-height:200px; overflow-y:auto; margin-top:8px;">';
                     html += '<table style="width:100%;border-collapse:collapse;font-size:11px;">';
                     html += '<thead><tr style="border-bottom:1px solid #e5e7eb;">';
-                    html += '<th style="text-align:left;padding:4px 6px;color:#6b7280;font-size:10px;font-weight:700;">Status</th>';
-                    html += '<th style="text-align:center;padding:4px 6px;color:#6b7280;font-size:10px;font-weight:700;">SO</th>';
-                    html += '<th style="text-align:right;padding:4px 6px;color:#6b7280;font-size:10px;font-weight:700;">Qty</th>';
-                    html += '<th style="text-align:right;padding:4px 6px;color:#6b7280;font-size:10px;font-weight:700;">Ots DO</th>';
-                    html += '<th style="text-align:right;padding:4px 6px;color:#6b7280;font-size:10px;font-weight:700;">Ots. SO Value</th>';
+                    html += '<th style="text-align:center;padding:4px 6px;color:#6b7280;font-size:10px;font-weight:700;white-space:nowrap;vertical-align:middle;">Status</th>';
+                    html += '<th style="text-align:center;padding:4px 6px;color:#6b7280;font-size:10px;font-weight:700;white-space:normal;word-break:break-word;line-height:1.25;vertical-align:middle;">SO</th>';
+                    html += '<th style="text-align:center;padding:4px 6px;color:#6b7280;font-size:10px;font-weight:700;white-space:normal;word-break:break-word;line-height:1.25;vertical-align:middle;">Qty</th>';
+                    html += '<th style="text-align:center;padding:4px 6px;color:#6b7280;font-size:10px;font-weight:700;white-space:normal;word-break:break-word;line-height:1.25;vertical-align:middle;">Ots DO</th>';
+                    html += '<th style="text-align:center;padding:4px 6px;color:#6b7280;font-size:10px;font-weight:700;white-space:normal;word-break:break-word;line-height:1.25;vertical-align:middle;">% DO</th>';
+                    html += '<th style="text-align:center;padding:4px 6px;color:#6b7280;font-size:10px;font-weight:700;white-space:normal;word-break:break-word;line-height:1.25;vertical-align:middle;">Ots. SO Value</th>';
                     html += '</tr></thead><tbody>';
                     for (var ei = 0; ei < categories.length; ei++) {
                         if (c.bucketCount[ei] > 0) {
                             var safeKunnrBucket = c.kunnr.replace(/'/g, "\\'");
+                            var bQty = c.bucketQty[ei];
+                            var bOtsDO = c.bucketOtsDOQty[ei];
+                            var doPct = bQty > 0 ? ((bQty - bOtsDO) / bQty * 100) : 0;
+                            var doPctColor = doPct >= 80 ? '#16a34a' : doPct >= 50 ? '#ca8a04' : '#dc2626';
                             html += '<tr style="border-bottom:1px solid #f3f4f6;cursor:pointer;transition:background 0.15s;" onmouseover="this.style.background=\'#f0f9ff\'" onmouseout="this.style.background=\'transparent\'" onclick="window.__soApp.filterByBucket(\'' + safeKunnrBucket + '\',\'' + categories[ei].label + '\')">';
                             html += '<td style="padding:4px 6px;"><span style="display:inline-flex;align-items:center;gap:4px;"><span style="width:8px;height:8px;border-radius:2px;background:' + categories[ei].color + ';display:inline-block;"></span><span style="font-weight:700;font-size:12px;color:#1f2937;">' + categories[ei].label + '</span><span style="color:#6b7280;font-size:10px;">(' + categories[ei].name + ')</span></span></td>';
                             html += '<td style="padding:4px 6px;text-align:center;font-weight:600;">' + c.bucketSO[ei].size + '</td>';
-                            html += '<td style="padding:4px 6px;text-align:right;">' + Math.floor(c.bucketQty[ei]).toLocaleString('en-US') + '</td>';
-                            html += '<td style="padding:4px 6px;text-align:right;font-weight:600;color:#e65100;">' + Math.floor(c.bucketOtsDOQty[ei]).toLocaleString('en-US') + '</td>';
+                            html += '<td style="padding:4px 6px;text-align:right;">' + Math.floor(bQty).toLocaleString('en-US') + '</td>';
+                            html += '<td style="padding:4px 6px;text-align:right;font-weight:600;color:#e65100;">' + Math.floor(bOtsDO).toLocaleString('en-US') + '</td>';
+                            html += '<td style="padding:4px 6px;text-align:center;font-weight:700;color:' + doPctColor + ';">' + that._fmtPct(doPct) + '</td>';
                             html += '<td style="padding:4px 6px;text-align:right;font-weight:700;font-size:12px;color:#1f2937;">' + that._usdNoDecimal(c.buckets[ei]) + '</td>';
                             html += '</tr>';
                         }
@@ -577,11 +591,14 @@ sap.ui.define([
                     for (var si = 0; si < 6; si++) {
                         c.bucketSO[si].forEach(function(v){ totalSO.add(v); });
                     }
+                    var totalDOPct = c.totalQty > 0 ? ((c.totalQty - c.totalOtsDO) / c.totalQty * 100) : 0;
+                    var totalDOPctColor = totalDOPct >= 80 ? '#16a34a' : totalDOPct >= 50 ? '#ca8a04' : '#dc2626';
                     html += '<tr style="border-top:2px solid #d1d5db;background:#f9fafb;">';
                     html += '<td style="padding:4px 6px;font-weight:700;color:#374151;">Total</td>';
                     html += '<td style="padding:4px 6px;text-align:center;font-weight:700;">' + totalSO.size + '</td>';
                     html += '<td style="padding:4px 6px;text-align:right;font-weight:700;">' + Math.floor(c.totalQty).toLocaleString('en-US') + '</td>';
                     html += '<td style="padding:4px 6px;text-align:right;font-weight:700;color:#e65100;">' + Math.floor(c.totalOtsDO).toLocaleString('en-US') + '</td>';
+                    html += '<td style="padding:4px 6px;text-align:center;font-weight:700;color:' + totalDOPctColor + ';">' + that._fmtPct(totalDOPct) + '</td>';
                     html += '<td style="padding:4px 6px;text-align:right;font-weight:700;color:#166534;">' + that._usdNoDecimal(c.totalValue) + '</td>';
                     html += '</tr>';
                     html += '</tbody></table>';
@@ -621,10 +638,14 @@ sap.ui.define([
 
             var sorted = Object.entries(C).sort(function (a, b) { return b[1].v - a[1].v; });
 
-            var th = function (txt, align) {
+            var th = function (txt, nowrap) {
+                var wrapStyle = nowrap
+                    ? 'white-space:nowrap;'
+                    : 'white-space:normal;word-break:break-word;line-height:1.25;';
                 return '<th style="padding:8px 10px;font-size:11px;font-weight:700;text-transform:uppercase;'
                      + 'letter-spacing:.04em;color:var(--text-muted);border-bottom:1px solid var(--border-medium);'
-                     + 'text-align:' + (align || "left") + '">' + txt + '</th>';
+                     + wrapStyle
+                     + 'vertical-align:middle;text-align:center;">' + txt + '</th>';
             };
 
             var rows = sorted.map(function (e, i) {
@@ -635,11 +656,15 @@ sap.ui.define([
                 var safeKunnr = kunnr.replace(/'/g, "\\'");
                 var rowClass = isActive ? 'active-row' : '';
 
+                var doPct = d.qty > 0 ? ((d.qty - d.otsDO) / d.qty * 100) : 0;
+                var doPctColor = doPct >= 80 ? '#16a34a' : doPct >= 50 ? '#ca8a04' : '#dc2626';
+
                 return '<tr class="' + rowClass + '" onclick="window.__soApp.selectCustomer(\'' + safeKunnr + '\',\'' + safeName + '\')">'
                      + '<td style="padding:8px 10px;font-size:12px;color:var(--text-faint)">' + (i + 1) + '</td>'
                      + '<td style="padding:8px 10px;font-weight:600;font-size:12px;color:' + (isActive ? "#c8401a" : "var(--text-primary)") + ';word-break:break-word;white-space:normal;">' + (isActive ? '▶ ' : '') + safeName + '</td>'
                      + '<td style="padding:8px 10px;color:var(--text-muted);font-size:12px;text-align:right">' + Math.floor(d.qty).toLocaleString('en-US') + '</td>'
                      + '<td style="padding:8px 10px;color:#e65100;font-size:12px;font-weight:600;text-align:right">' + Math.floor(d.otsDO).toLocaleString('en-US') + '</td>'
+                     + '<td style="padding:8px 10px;font-size:12px;font-weight:700;text-align:center;color:' + doPctColor + '">' + that._fmtPct(doPct) + '</td>'
                      + '<td style="padding:8px 10px;font-size:12px;font-weight:700;text-align:center;color:#4f46e5">' + d.soSet.size + '</td>'
                      + '<td style="padding:8px 10px;text-align:right;font-weight:700;font-size:12px;color:var(--text-primary)">' + that._usdNoDecimal(d.v) + '</td>'
                      + '</tr>';
@@ -651,7 +676,7 @@ sap.ui.define([
 
             var html = '<div class="custTableContainer">' + clearBtn
                      + '<table class="custTable">'
-                     + '<thead><tr>' + th("No") + th("Customer") + th("Total Qty", "right") + th("Ots. DO", "right") + th("Ots. SO", "center") + th("Ots. SO Value", "right") + '</tr></thead>'
+                     + '<thead><tr>' + th("No", true) + th("Customer") + th("Total Qty") + th("Ots. DO") + th("% DO") + th("Ots. SO") + th("Ots. SO Value") + '</tr></thead>'
                      + '<tbody>' + rows + '</tbody>'
                      + '</table></div>';
             var custHtml = this.byId("custTableHtml");

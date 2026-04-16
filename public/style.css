@@ -280,12 +280,16 @@ html, body {
     letter-spacing: .04em;
     color: var(--text-muted);
     border-bottom: 1px solid var(--border-medium);
-    text-align: left;
+    text-align: center;
     background: var(--bg-table-header);
     backdrop-filter: blur(var(--blur));
     position: sticky;
     top: 0;
     z-index: 2;
+    white-space: normal;
+    word-break: break-word;
+    line-height: 1.25;
+    vertical-align: middle;
 }
 .custTable td {
     padding: 8px 10px;
