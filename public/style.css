@@ -301,6 +301,16 @@ html, body {
 .custTable tbody tr:hover { background: var(--bg-card-hover); }
 .custTable .active-row { background: var(--active-row-bg); }
 
+/* Cell class helpers */
+.ctNo   { padding: 8px 6px 8px 10px; font-size: 12px; color: var(--text-faint); text-align: center; white-space: nowrap; }
+.ctName { padding: 8px 10px; font-weight: 600; font-size: 12px; word-break: break-word; }
+.ctNum  { padding: 8px 8px; font-size: 12px; text-align: right; white-space: nowrap; }
+.ctVal  { padding: 8px 10px; text-align: right; font-weight: 700; font-size: 12px; white-space: nowrap; color: var(--text-primary); }
+
+/* Nama panjang tampil di desktop, nama pendek disembunyikan */
+.ctNameFull  { display: inline; }
+.ctNameShort { display: none; }
+
 /* ===== DETAIL TABLE ===== */
 .sapMTableRowCell {
     font-size: 13px !important;
@@ -430,53 +440,324 @@ html, body {
 }
 
 /* ===== FILTER BAR ===== */
+/* ===== PLAIN HTML FILTER CONTROLS ===== */
+
+/* Base: semua filter control punya tampilan seragam */
+.soSelectCtrl,
+.soPickerBtn,
+.soSearchInput,
+.soFilterBtn {
+    height: 34px;
+    font-size: 12px;
+    font-family: "72", "72full", Arial, Helvetica, sans-serif;
+    border: 1px solid var(--border-medium, #c0c4cc);
+    border-radius: 6px;
+    background: var(--bg-glass-solid, #fff);
+    color: var(--text-primary, #1d2d3e);
+    outline: none;
+    box-shadow: none;
+    box-sizing: border-box;
+    transition: border-color 0.15s, background 0.15s;
+    cursor: pointer;
+}
+.soSelectCtrl:hover, .soPickerBtn:hover, .soSearchInput:hover, .soFilterBtn:hover {
+    border-color: var(--accent, #28a745);
+}
+.soSelectCtrl:focus, .soSearchInput:focus {
+    border-color: var(--accent, #28a745);
+    box-shadow: 0 0 0 2px rgba(40,167,69,0.12);
+}
+
+/* Status dropdown */
+.soSelectCtrl {
+    padding: 0 28px 0 10px;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+    min-width: 110px;
+    cursor: pointer;
+}
+
+/* Picker buttons */
+.soPickerBtn {
+    padding: 0 10px;
+    min-width: 74px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    white-space: nowrap;
+}
+
+/* Search wrapper */
+.soSearchWrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+    flex: 1 1 auto;
+    min-width: 120px;
+    max-width: 360px;
+}
+.soSearchIcon {
+    position: absolute;
+    left: 9px;
+    width: 14px;
+    height: 14px;
+    color: var(--text-faint, #9ca3af);
+    pointer-events: none;
+    flex-shrink: 0;
+}
+.soSearchInput {
+    width: 100%;
+    padding: 0 10px 0 30px;
+    cursor: text;
+}
+.soSearchInput::placeholder { color: var(--text-faint, #9ca3af); }
+
+/* Excel / PDF buttons */
+.soFilterBtn {
+    padding: 0 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    white-space: nowrap;
+    font-weight: 500;
+    flex-shrink: 0;
+    color: #1d6fa4;
+    border-color: #b8d4e8;
+    background: rgba(29,111,164,0.06);
+}
+.soFilterBtn svg {
+    width: 14px;
+    height: 14px;
+    stroke: currentColor;
+    flex-shrink: 0;
+}
+.soFilterBtn:hover { background: rgba(29,111,164,0.14); border-color: #1d6fa4; }
+.soFilterBtnPdf { color: #b91c1c; border-color: #f0b8b8; background: rgba(185,28,28,0.06); }
+.soFilterBtnPdf:hover { background: rgba(185,28,28,0.14); border-color: #b91c1c; }
+
+/* core:HTML picker wrappers — transparent ke flex parent */
+#monthFilterBtn, #reqDeliveryFilterBtn {
+    display: contents !important;
+}
+
+/* ===== SAPUI5 Select override (.soSapSelect) ===== */
+.soSapSelect.sapMSlt,
+.soSapSelect {
+    height: 34px !important;
+    min-height: 34px !important;
+    max-height: 34px !important;
+    border: 1px solid var(--border-medium, #c0c4cc) !important;
+    border-radius: 6px !important;
+    background: var(--bg-glass-solid, #fff) !important;
+    box-shadow: none !important;
+    min-width: 110px !important;
+    outline: none !important;
+}
+.soSapSelect .sapMSltLabel {
+    font-size: 12px !important;
+    font-family: "72", "72full", Arial, Helvetica, sans-serif !important;
+    color: var(--text-primary, #1d2d3e) !important;
+    line-height: 32px !important;
+    padding: 0 28px 0 10px !important;
+}
+.soSapSelect .sapMSltArrow {
+    line-height: 32px !important;
+    color: var(--text-muted, #6b7280) !important;
+    border-left: none !important;
+    background: transparent !important;
+}
+.soSapSelect.sapMSlt:hover {
+    border-color: var(--accent, #28a745) !important;
+}
+.soSapSelect.sapMSltFocused {
+    border-color: var(--accent, #28a745) !important;
+    box-shadow: 0 0 0 2px rgba(40,167,69,0.12) !important;
+}
+/* dark theme */
+.dark-theme .soSapSelect.sapMSlt {
+    background: var(--bg-glass-solid) !important;
+    border-color: var(--border-medium) !important;
+}
+.dark-theme .soSapSelect .sapMSltLabel {
+    color: var(--text-primary) !important;
+}
+
+/* ===== SAPUI5 SearchField override (.soSapSearch) ===== */
+.soSapSearch.sapMSF,
+.soSapSearch {
+    height: 34px !important;
+    min-height: 34px !important;
+    max-height: 34px !important;
+    border: 1px solid var(--border-medium, #c0c4cc) !important;
+    border-radius: 6px !important;
+    background: var(--bg-glass-solid, #fff) !important;
+    box-shadow: none !important;
+    flex: 1 1 auto !important;
+    min-width: 120px !important;
+    max-width: 360px !important;
+    outline: none !important;
+}
+.soSapSearch .sapMSFI {
+    font-size: 12px !important;
+    font-family: "72", "72full", Arial, Helvetica, sans-serif !important;
+    color: var(--text-primary, #1d2d3e) !important;
+    background: transparent !important;
+    height: 100% !important;
+}
+.soSapSearch .sapMSFI::placeholder {
+    color: var(--text-faint, #9ca3af) !important;
+}
+.soSapSearch.sapMSFocus,
+.soSapSearch:focus-within {
+    border-color: var(--accent, #28a745) !important;
+    box-shadow: 0 0 0 2px rgba(40,167,69,0.12) !important;
+}
+.soSapSearch .sapMSFB { /* search/clear button */
+    background: transparent !important;
+    border: none !important;
+    color: var(--text-muted, #6b7280) !important;
+}
+/* dark theme */
+.dark-theme .soSapSearch.sapMSF {
+    background: var(--bg-glass-solid) !important;
+    border-color: var(--border-medium) !important;
+}
+.dark-theme .soSapSearch .sapMSFI {
+    color: var(--text-primary) !important;
+}
+
+/* ===== FILTER BAR — desktop: 1 baris penuh, rapi ===== */
 .filterBarWrap {
-    padding: 8px 12px !important;
-    background: var(--bg-glass-solid);
-    border-bottom: 1px solid var(--border-light);
-    gap: 0 !important;
-    /* Desktop: 1 row via flex-direction row */
+    display: flex !important;
     flex-direction: row !important;
     flex-wrap: nowrap !important;
     align-items: center !important;
+    gap: 6px !important;
+    padding: 7px 12px !important;
+    background: var(--bg-glass-solid);
+    border-bottom: 1px solid var(--border-light);
+    min-height: 46px;
+    box-sizing: border-box;
 }
-.filterRow1,
-.filterRow2 {
-    gap: 8px !important;
-    flex-shrink: 0;
-    align-items: center !important;
-}
+
+/* filterRow1 (Status, Delivery, Req.Del) — lebar tetap, tidak mengembang */
 .filterRow1 {
-    flex: 0 0 auto;
-    margin-right: 8px;
+    display: flex !important;
+    flex-direction: row !important;
+    flex: 0 0 auto !important;
+    flex-shrink: 0 !important;
+    align-items: center !important;
+    gap: 6px !important;
+    flex-wrap: nowrap !important;
 }
+
+/* Separator visual antara filter group dan search group */
+.filterRow1::after {
+    content: '';
+    display: inline-block;
+    width: 1px;
+    height: 20px;
+    background: var(--border-medium);
+    margin-left: 2px;
+    flex-shrink: 0;
+}
+
+/* filterRow2 (Search, Excel, PDF, count) — mengisi sisa ruang */
 .filterRow2 {
-    flex: 1 1 auto;
+    display: flex !important;
+    flex-direction: row !important;
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    align-items: center !important;
+    gap: 6px !important;
+    flex-wrap: nowrap !important;
 }
+
 .filterLabel {
     font-size: 11px !important;
     font-weight: 600 !important;
     color: var(--text-muted) !important;
-    white-space: nowrap;
+    white-space: nowrap !important;
+    flex-shrink: 0 !important;
+    line-height: 32px !important;
+}
+
+/* SAPUI5 Select (Status) — height & width consistent */
+.filterSelect.sapMSlt {
+    min-width: 110px !important;
+    max-width: 140px !important;
+    height: 36px !important;
+    line-height: 34px !important;
+    flex-shrink: 0 !important;
+    box-sizing: border-box !important;
+}
+.filterSelect.sapMSlt .sapMSltLabel {
+    line-height: 34px !important;
+    font-size: 12px !important;
+}
+
+/* core:HTML wrapper untuk picker buttons — hapus spacing bawaan */
+#monthFilterBtn, #reqDeliveryFilterBtn {
+    display: inline-flex !important;
+    align-items: center !important;
+    line-height: 0 !important;
     flex-shrink: 0;
 }
-.filterSelect {
-    min-width: 95px !important;
-    flex-shrink: 1;
+
+/* Picker buttons — plain HTML button, full kontrol */
+.soPickerBtn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 36px;
+    min-width: 76px;
+    padding: 0 10px;
+    border: 1px solid var(--border-medium, #c0c4cc);
+    border-radius: 4px;
+    background: var(--bg-glass-solid, #fff);
+    color: var(--text-primary, #1d2d3e);
+    font-size: 12px;
+    font-family: inherit;
+    font-weight: 400;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: border-color 0.15s, background 0.15s;
+    outline: none;
+    box-shadow: none;
+    line-height: 1;
 }
+.soPickerBtn:hover { border-color: var(--accent, #28a745); background: var(--bg-card-hover, #f0fdf4); }
+.soPickerBtn:active { background: rgba(40,167,69,0.08); }
+
+/* Search field — fill remaining */
 .filterSearchField {
-    flex: 1 !important;
-    min-width: 100px !important;
+    flex: 1 1 auto !important;
+    min-width: 120px !important;
+    max-width: 360px !important;
 }
+.filterSearchField .sapMSF,
+.filterSearchField .sapMSFInner {
+    height: 36px !important;
+    line-height: 34px !important;
+}
+
+/* Excel & PDF buttons */
 .filterBtn {
-    white-space: nowrap;
-    flex-shrink: 0;
+    flex-shrink: 0 !important;
+    white-space: nowrap !important;
 }
+
+/* Row count text */
 .rowCountText {
     font-size: 11px !important;
     color: var(--text-muted) !important;
     white-space: nowrap !important;
-    flex-shrink: 0;
+    flex-shrink: 0 !important;
+    margin-left: auto !important;
 }
 
 /* ===== TWO-PANEL LAYOUT ===== */
@@ -487,6 +768,200 @@ html, body {
     width: 49% !important;
     min-width: 0 !important;
     flex-shrink: 1 !important;
+}
+
+/* ===== PICKER BUTTON (menggantikan Select dropdown) ===== */
+.pickerBtn.sapMBtn {
+    border: 1px solid var(--border-medium) !important;
+    border-radius: 6px !important;
+    background: var(--bg-glass-solid) !important;
+    min-width: 80px !important;
+    height: 32px !important;
+    padding: 0 10px !important;
+    font-size: 12px !important;
+    color: var(--text-primary) !important;
+    text-align: left !important;
+    backdrop-filter: blur(var(--blur)) !important;
+    transition: border-color 0.15s, background 0.15s !important;
+}
+.pickerBtn.sapMBtn:hover { border-color: var(--accent) !important; }
+.pickerBtn.sapMBtn .sapMBtnContent { font-size: 12px !important; }
+
+/* ===== MONTH PICKER POPUP (compact) ===== */
+#__monthPickerPopup {
+    position: fixed;
+    z-index: 9999;
+    background: var(--bg-glass-solid, #ffffffee);
+    border: 1px solid var(--border-medium, rgba(0,0,0,0.12));
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.15), 0 2px 8px rgba(0,0,0,0.08);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    width: 306px;
+    overflow: hidden;
+    animation: mpFadeIn 0.13s ease;
+}
+@keyframes mpFadeIn {
+    from { opacity: 0; transform: translateY(-5px) scale(0.97); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Overlay backdrop */
+#__monthPickerOverlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9998;
+    background: transparent;
+}
+
+/* Compact top bar: title + year nav + All + close in 1 row */
+.mp-bar {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 7px 8px 7px 10px;
+    border-bottom: 1px solid var(--border-light, rgba(0,0,0,0.08));
+    background: var(--bg-table-alt, rgba(0,0,0,0.025));
+}
+.mp-title {
+    flex: 1;
+    font-size: 9.5px;
+    font-weight: 700;
+    color: var(--text-muted, #6b7280);
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    white-space: nowrap;
+}
+.mp-nav-btn {
+    background: transparent;
+    border: 1px solid var(--border-medium, rgba(0,0,0,0.12));
+    border-radius: 5px;
+    width: 22px;
+    height: 22px;
+    font-size: 14px;
+    cursor: pointer;
+    color: var(--text-secondary, #374151);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    line-height: 1;
+    transition: background 0.1s, color 0.1s;
+    flex-shrink: 0;
+}
+.mp-nav-btn:hover { background: var(--accent, #28a745); color: #fff; border-color: var(--accent); }
+.mp-year-label {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-primary, #111827);
+    min-width: 38px;
+    text-align: center;
+    flex-shrink: 0;
+}
+.mp-all-sm {
+    padding: 2px 8px;
+    border-radius: 10px;
+    border: 1px solid var(--border-medium, rgba(0,0,0,0.12));
+    background: transparent;
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text-muted, #6b7280);
+    cursor: pointer;
+    transition: all 0.1s;
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+.mp-all-sm:hover { background: var(--text-primary, #111827); color: #fff; border-color: var(--text-primary); }
+.mp-close-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text-faint, #9ca3af);
+    font-size: 13px;
+    padding: 2px 3px;
+    border-radius: 4px;
+    line-height: 1;
+    transition: color 0.1s;
+    flex-shrink: 0;
+}
+.mp-close-btn:hover { color: var(--text-primary, #111827); }
+
+/* Body: left weeks scroll + center months grid */
+.mp-body {
+    display: flex;
+    gap: 0;
+}
+
+/* Left panel: scrollable week list */
+.mp-weeks-col {
+    width: 46px;
+    flex-shrink: 0;
+    height: 184px;
+    overflow-y: auto;
+    border-right: 1px solid var(--border-light, rgba(0,0,0,0.07));
+    padding: 4px 3px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--scrollbar-thumb) transparent;
+}
+.mp-weeks-col::-webkit-scrollbar { width: 3px; }
+.mp-weeks-col::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 2px; }
+
+.mp-week-cell {
+    flex-shrink: 0;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 9.5px;
+    font-weight: 700;
+    color: var(--text-faint, #9ca3af);
+    border-radius: 5px;
+    letter-spacing: .03em;
+    cursor: pointer;
+    transition: background 0.1s, color 0.1s;
+    user-select: none;
+}
+.mp-week-cell:hover       { background: rgba(40,167,69,0.13); color: #166534; }
+.mp-week-cell.mp-hi       { background: rgba(40,167,69,0.09); color: #15803d; }
+.mp-week-cell.mp-week-sel { background: var(--accent, #28a745) !important; color: #fff !important; box-shadow: 0 1px 6px rgba(40,167,69,0.35); }
+
+/* Right panel: months 4×3 grid */
+.mp-months-grid {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 6px 6px;
+}
+.mp-month-row {
+    display: flex;
+    gap: 4px;
+}
+.mp-month-cell {
+    flex: 1;
+    height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 600;
+    border-radius: 7px;
+    cursor: pointer;
+    color: var(--text-secondary, #374151);
+    border: 1.5px solid transparent;
+    transition: all 0.1s;
+    user-select: none;
+}
+.mp-month-cell:hover    { background: rgba(40,167,69,0.12); border-color: rgba(40,167,69,0.35); color: #166534; }
+.mp-month-cell.mp-hi    { background: rgba(40,167,69,0.08); border-color: rgba(40,167,69,0.2); color: #15803d; }
+.mp-month-cell.mp-month-sel {
+    background: var(--accent, #28a745) !important;
+    color: #fff !important;
+    border-color: var(--accent, #28a745) !important;
+    box-shadow: 0 2px 8px rgba(40,167,69,0.3);
 }
 
 /* ===== RESPONSIVE - TABLET ===== */
@@ -531,37 +1006,60 @@ html, body {
     .agingSubtitle { display: none !important; }
 
     /* Customer table */
-    .custTable th { padding: 6px 8px; font-size: 10px; }
-    .custTable td { padding: 6px 8px; font-size: 11px; }
+    /* Top Customer table: compact mobile */
+    .custTable th {
+        padding: 4px 5px;
+        font-size: 9px;
+        letter-spacing: 0;
+        white-space: normal;
+        line-height: 1.2;
+    }
+    .custTable td   { padding: 5px 5px; font-size: 10px; }
+    .ctNo           { padding: 5px 4px 5px 5px; font-size: 10px; }
+    .ctName         { padding: 5px 5px; font-size: 10px; font-weight: 700; }
+    .ctNum          { padding: 5px 4px; font-size: 10px; }
+    .ctVal          { padding: 5px 5px; font-size: 10px; }
+
+    /* Tampilkan nama pendek (kata pertama), sembunyikan nama panjang */
+    .ctNameFull  { display: none; }
+    .ctNameShort { display: inline; }
     #custScrollContainer { height: 250px !important; }
 
     /* Aging cards */
     .aging-card { padding: 10px; margin-bottom: 8px; }
 
-    /* Filter bar mobile: stack to 2 rows */
+    /* Filter bar mobile: 2 baris rapi */
     .filterBarWrap {
         flex-direction: column !important;
+        align-items: stretch !important;
         gap: 6px !important;
-        padding: 8px !important;
+        padding: 8px 10px !important;
+        min-height: unset !important;
     }
-    .filterRow1,
-    .filterRow2 {
+    .filterRow1 {
+        flex: 0 0 auto !important;
         width: 100% !important;
-        margin-right: 0 !important;
+        gap: 5px !important;
     }
-    .filterRow1 { gap: 6px !important; }
-    .filterRow2 { gap: 6px !important; }
+    .filterRow1::after { display: none !important; }
+    .filterRow2 {
+        flex: 0 0 auto !important;
+        width: 100% !important;
+        gap: 5px !important;
+    }
     .filterLabel { display: none !important; }
-    .filterSelect {
-        min-width: 0 !important;
-        flex: 1 1 0% !important;
+    .soSelectCtrl, .soPickerBtn {
+        flex: 1 1 0%;
+        min-width: 0;
+        max-width: none;
+        width: 100%;
     }
-    .filterSearchField {
-        flex: 1 !important;
-        min-width: 0 !important;
+    .soSearchWrap {
+        max-width: none;
+        min-width: 0;
     }
-    .filterBtn .sapMBtnContent .sapMBtnText { display: none !important; }
-    .rowCountText { font-size: 10px !important; }
+    .soFilterBtn { padding: 0 10px; }
+    .rowCountText { font-size: 10px !important; margin-left: 0 !important; }
 
     /* Detail SO */
     .soScrollContainer { height: 350px !important; }

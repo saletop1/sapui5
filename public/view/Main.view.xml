@@ -69,30 +69,26 @@
                     <VBox class="filterBarWrap">
                         <HBox class="filterRow1" alignItems="Center">
                             <Label text="Status:" class="filterLabel"/>
-                            <Select id="statusFilter" selectedKey="ALL" change="onStatusFilterChange" class="filterSelect">
+                            <Select id="statusFilter" selectedKey="ALL" change="onStatusFilterChange" class="soSapSelect">
                                 <items>
-                                    <core:ListItem key="ALL" text="All Status"/>
-                                    <core:ListItem key="New" text="New"/>
-                                    <core:ListItem key="Pending" text="Pending"/>
-                                    <core:ListItem key="Low" text="Low"/>
-                                    <core:ListItem key="Medium" text="Medium"/>
-                                    <core:ListItem key="Warning" text="Warning"/>
+                                    <core:ListItem key="ALL"       text="All Status"/>
+                                    <core:ListItem key="New"       text="New"/>
+                                    <core:ListItem key="Pending"   text="Pending"/>
+                                    <core:ListItem key="Low"       text="Low"/>
+                                    <core:ListItem key="Medium"    text="Medium"/>
+                                    <core:ListItem key="Warning"   text="Warning"/>
                                     <core:ListItem key="Prioritas" text="Prioritas"/>
                                 </items>
                             </Select>
                             <Label text="Delivery:" class="filterLabel"/>
-                            <Select id="monthFilter" change="onMonthFilterChange" class="filterSelect">
-                                <items/>
-                            </Select>
+                            <core:HTML id="monthFilterBtn" content="&lt;button class='soPickerBtn' onclick='window.__soApp.onDeliveryPickerOpen(this)'&gt;All &#9660;&lt;/button&gt;"/>
                             <Label text="Req. Del:" class="filterLabel"/>
-                            <Select id="reqDeliveryFilter" selectedKey="ALL" change="onReqDeliveryFilterChange" class="filterSelect">
-                                <items/>
-                            </Select>
+                            <core:HTML id="reqDeliveryFilterBtn" content="&lt;button class='soPickerBtn' onclick='window.__soApp.onReqDeliveryPickerOpen(this)'&gt;All &#9660;&lt;/button&gt;"/>
                         </HBox>
                         <HBox class="filterRow2" alignItems="Center">
-                            <SearchField id="searchField" liveChange="onSearch" placeholder="Search SO, customer..." class="filterSearchField"/>
-                            <Button icon="sap-icon://excel-attachment" text="Excel" type="Default" press="onExportExcel" class="filterBtn"/>
-                            <Button icon="sap-icon://pdf-attachment" text="PDF" type="Default" press="onExportPdf" class="filterBtn"/>
+                            <SearchField id="searchField" liveChange="onSearch" placeholder="Search SO, customer..." class="soSapSearch"/>
+                            <core:HTML content="&lt;button class='soFilterBtn' onclick='window.__soApp.onExportExcel()'&gt;&lt;svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'&gt;&lt;rect x='3' y='3' width='18' height='18' rx='2'/&gt;&lt;path d='M3 9h18M9 21V9'/&gt;&lt;/svg&gt; Excel&lt;/button&gt;"/>
+                            <core:HTML content="&lt;button class='soFilterBtn soFilterBtnPdf' onclick='window.__soApp.onExportPdf()'&gt;&lt;svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'&gt;&lt;path d='M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z'/&gt;&lt;polyline points='14,2 14,8 20,8'/&gt;&lt;/svg&gt; PDF&lt;/button&gt;"/>
                             <Text id="rowCount" text="–" class="rowCountText"/>
                         </HBox>
                     </VBox>

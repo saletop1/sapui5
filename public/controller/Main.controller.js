@@ -38,6 +38,8 @@ sap.ui.define([
             this._currentPage     = 1;
             this._pageSize        = 50;
             this._filteredData    = [];
+            this._pickerYear      = new Date().getFullYear();
+            this._pickerFilterType = null;
 
             this.getView().setModel(new JSONModel({ results: [], resultsPaged: [] }));
 
@@ -94,6 +96,7 @@ sap.ui.define([
         onSourceChange: function (oEvent) {
             var idx = oEvent.getParameter("selectedIndex");
             this._currentSource = (idx === 1) ? "surabaya" : "semarang";
+            this._hideMonthPicker();
 
             this._selectedKunnr = null;
             this._selectedName  = null;
@@ -103,20 +106,30 @@ sap.ui.define([
             this._reqDeliveryFilter = "ALL";
             this._expandedCustomers = {};
 
-            var sf = this.byId("searchField");
-            if (sf) sf.setValue("");
-            var statusCombo = this.byId("statusFilter");
-            if (statusCombo) statusCombo.setSelectedKey("ALL");
-            var monthCombo = this.byId("monthFilter");
-            if (monthCombo) monthCombo.setSelectedKey("ALL");
-            var reqDelCombo = this.byId("reqDeliveryFilter");
-            if (reqDelCombo) reqDelCombo.setSelectedKey("ALL");
+            this._resetFilterControls();
 
             this._updateSelectedBadge();
 
             var cfg = SOURCE_CONFIG[this._currentSource];
             MessageToast.show("Loading data " + cfg.label + "...");
             this._loadData();
+        },
+
+        /** Helper: ambil elemen DOM di dalam core:HTML wrapper */
+        _innerEl: function (id, selector) {
+            var ctrl = this.byId(id);
+            var dom  = ctrl && ctrl.getDomRef ? ctrl.getDomRef() : null;
+            return dom ? (selector ? dom.querySelector(selector) : dom.firstElementChild) : null;
+        },
+
+        /** Reset semua filter controls ke nilai awal */
+        _resetFilterControls: function () {
+            var statusCtrl = this.byId("statusFilter");
+            if (statusCtrl) statusCtrl.setSelectedKey("ALL");
+            var searchCtrl = this.byId("searchField");
+            if (searchCtrl) searchCtrl.setValue("");
+            this._updatePickerBtnLabel("monthFilterBtn", "ALL");
+            this._updatePickerBtnLabel("reqDeliveryFilterBtn", "ALL");
         },
 
         _removeLeadingZero: function (str) {
@@ -386,12 +399,12 @@ sap.ui.define([
 
             // Set status filter
             this._statusFilter = statusLabel;
-            var statusCombo = this.byId("statusFilter");
-            if (statusCombo) statusCombo.setSelectedKey(statusLabel);
+            var statusCtrl = this.byId("statusFilter");
+            if (statusCtrl) statusCtrl.setSelectedKey(statusLabel);
 
             this._searchQuery = "";
-            var sf = this.byId("searchField");
-            if (sf) sf.setValue("");
+            var searchCtrl = this.byId("searchField");
+            if (searchCtrl) searchCtrl.setValue("");
 
             this._updateSelectedBadge();
             this._buildCustTable();
@@ -659,14 +672,21 @@ sap.ui.define([
                 var doPct = d.qty > 0 ? ((d.qty - d.otsDO) / d.qty * 100) : 0;
                 var doPctColor = doPct >= 80 ? '#16a34a' : doPct >= 50 ? '#ca8a04' : '#dc2626';
 
+                // Nama pendek = kata pertama saja (untuk mobile)
+                var shortName = safeName.split(/[\s,]+/)[0];
+
                 return '<tr class="' + rowClass + '" onclick="window.__soApp.selectCustomer(\'' + safeKunnr + '\',\'' + safeName + '\')">'
-                     + '<td style="padding:8px 10px;font-size:12px;color:var(--text-faint)">' + (i + 1) + '</td>'
-                     + '<td style="padding:8px 10px;font-weight:600;font-size:12px;color:' + (isActive ? "#c8401a" : "var(--text-primary)") + ';word-break:break-word;white-space:normal;">' + (isActive ? '▶ ' : '') + safeName + '</td>'
-                     + '<td style="padding:8px 10px;color:var(--text-muted);font-size:12px;text-align:right">' + Math.floor(d.qty).toLocaleString('en-US') + '</td>'
-                     + '<td style="padding:8px 10px;color:#e65100;font-size:12px;font-weight:600;text-align:right">' + Math.floor(d.otsDO).toLocaleString('en-US') + '</td>'
-                     + '<td style="padding:8px 10px;font-size:12px;font-weight:700;text-align:center;color:' + doPctColor + '">' + that._fmtPct(doPct) + '</td>'
-                     + '<td style="padding:8px 10px;font-size:12px;font-weight:700;text-align:center;color:#4f46e5">' + d.soSet.size + '</td>'
-                     + '<td style="padding:8px 10px;text-align:right;font-weight:700;font-size:12px;color:var(--text-primary)">' + that._usdNoDecimal(d.v) + '</td>'
+                     + '<td class="ctNo">' + (i + 1) + '</td>'
+                     + '<td class="ctName" style="color:' + (isActive ? "#c8401a" : "var(--text-primary)") + ';">'
+                     +   (isActive ? '▶ ' : '')
+                     +   '<span class="ctNameFull">' + safeName + '</span>'
+                     +   '<span class="ctNameShort">' + shortName + '</span>'
+                     + '</td>'
+                     + '<td class="ctNum">' + Math.floor(d.qty).toLocaleString('en-US') + '</td>'
+                     + '<td class="ctNum" style="color:#e65100;font-weight:600;">' + Math.floor(d.otsDO).toLocaleString('en-US') + '</td>'
+                     + '<td class="ctNum" style="color:' + doPctColor + ';font-weight:700;">' + that._fmtPct(doPct) + '</td>'
+                     + '<td class="ctNum" style="color:#4f46e5;font-weight:700;">' + d.soSet.size + '</td>'
+                     + '<td class="ctVal">' + that._usdNoDecimal(d.v) + '</td>'
                      + '</tr>';
             }).join("");
 
@@ -697,8 +717,8 @@ sap.ui.define([
             this._selectedKunnr = kunnr;
             this._selectedName  = name;
             this._searchQuery   = "";
-            var sf = this.byId("searchField");
-            if (sf) sf.setValue("");
+            var searchCtrl = this.byId("searchField");
+            if (searchCtrl) searchCtrl.setValue("");
 
             this._updateSelectedBadge();
             this._buildCustTable();
@@ -744,25 +764,10 @@ sap.ui.define([
 
         onSearch: function (oEvent) {
             var that = this;
-            var val = oEvent.getSource().getValue();
-            this._searchQuery = val.toLowerCase();
-
+            this._searchQuery = oEvent.getSource().getValue().toLowerCase();
             if (this._searchTimer) clearTimeout(this._searchTimer);
             this._searchTimer = setTimeout(function () {
                 that._applyFilters();
-                // Restore focus ke search field setelah render
-                setTimeout(function () {
-                    var sf = that.byId("searchField");
-                    if (sf) {
-                        sf.focus();
-                        // Set cursor ke akhir teks
-                        var dom = sf.$().find("input")[0];
-                        if (dom) {
-                            var len = dom.value.length;
-                            dom.setSelectionRange(len, len);
-                        }
-                    }
-                }, 50);
             }, 300);
         },
 
@@ -772,74 +777,323 @@ sap.ui.define([
             this._updateAgingAnalysis();
         },
 
-        onMonthFilterChange: function (oEvent) {
-            this._monthFilter = oEvent.getSource().getSelectedKey();
+        /* =========================================================
+         *  MONTH PICKER — pengganti dropdown Delivery & Req. Del
+         * ========================================================= */
+
+        _MONTH_SHORT: ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],
+        _MONTH_FULL:  ["January","February","March","April","May","June",
+                       "July","August","September","October","November","December"],
+
+        /** Hitung ISO week number dari sebuah Date */
+        _isoWeekNum: function (date) {
+            var d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+            d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+            var yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+            return Math.ceil(((d - yearStart) / 86400000 + 1) / 7);
+        },
+
+        /** Hitung week-to-month dan month-to-weeks mapping untuk satu tahun */
+        _buildWeekMonthMap: function (year) {
+            var jan4 = new Date(year, 0, 4);
+            var dow  = jan4.getDay() || 7;                        // ISO Mon=1..Sun=7
+            var mon  = new Date(jan4);
+            mon.setDate(jan4.getDate() - dow + 1);                // Monday of W01
+
+            var weekToMonth = {};
+            var monthToWeeks = { 0:[],1:[],2:[],3:[],4:[],5:[],6:[],7:[],8:[],9:[],10:[],11:[] };
+
+            for (var w = 1; w <= 53; w++) {
+                var thu = new Date(mon); thu.setDate(mon.getDate() + 3);   // Thursday
+                if (thu.getFullYear() !== year) break;
+                var m = thu.getMonth();
+                weekToMonth[w] = m;
+                monthToWeeks[m].push(w);
+                mon = new Date(mon); mon.setDate(mon.getDate() + 7);
+            }
+            return { weekToMonth: weekToMonth, monthToWeeks: monthToWeeks };
+        },
+
+        /** Update teks tombol picker (core:HTML)
+         *  getDomRef() pada core:HTML mengembalikan elemen konten itu sendiri (si <button>),
+         *  bukan wrapper div — jadi langsung pakai elemen tersebut. */
+        _updatePickerBtnLabel: function (btnId, key) {
+            var ctrl = this.byId(btnId);
+            if (!ctrl) return;
+            var el = ctrl.getDomRef ? ctrl.getDomRef() : null;
+            if (!el) return;
+            // el bisa berupa <button> langsung, atau wrapper yang mengandung <button>
+            var btn = (el.classList && el.classList.contains("soPickerBtn"))
+                ? el
+                : el.querySelector(".soPickerBtn");
+            if (!btn) return;
+
+            var label;
+            if (!key || key === "ALL") {
+                label = "All \u25bc";
+            } else if (key.charAt(0) === "W") {
+                label = key + " \u25bc";
+            } else {
+                label = this._MONTH_SHORT[parseInt(key, 10)] + " \u25bc";
+            }
+            btn.textContent = label;
+        },
+
+        onDeliveryPickerOpen: function (el) {
+            this._showMonthPicker(el, "delivery");
+        },
+        onReqDeliveryPickerOpen: function (el) {
+            this._showMonthPicker(el, "reqdelivery");
+        },
+
+        _showMonthPicker: function (anchorEl, filterType) {
+            var that = this;
+            var existing = document.getElementById("__monthPickerPopup");
+            if (existing) {
+                var sameType = existing.dataset.filterType === filterType;
+                this._hideMonthPicker();
+                if (sameType) return;
+            }
+
+            this._pickerFilterType = filterType;
+            this._pickerYear = this._pickerYear || new Date().getFullYear();
+
+            var overlay = document.createElement("div");
+            overlay.id = "__monthPickerOverlay";
+            overlay.onclick = function () { that._hideMonthPicker(); };
+            document.body.appendChild(overlay);
+
+            var popup = document.createElement("div");
+            popup.id = "__monthPickerPopup";
+            popup.dataset.filterType = filterType;
+            document.body.appendChild(popup);
+
+            if (anchorEl) {
+                var rect   = anchorEl.getBoundingClientRect();
+                var popupW = 306;
+                var popupH = 240;
+                var left = Math.min(rect.left, window.innerWidth - popupW - 10);
+                var top  = rect.bottom + 5;
+                if (top + popupH > window.innerHeight) top = rect.top - popupH - 5;
+                popup.style.left = Math.max(6, left) + "px";
+                popup.style.top  = Math.max(6, top)  + "px";
+            }
+
+            this._renderPicker();
+        },
+
+        /** Render isi popup (dipanggil tiap ganti tahun) */
+        _renderPicker: function () {
+            var that     = this;
+            var popup    = document.getElementById("__monthPickerPopup");
+            if (!popup) return;
+
+            var filterType = this._pickerFilterType;
+            var yr         = this._pickerYear;
+            var curKey     = filterType === "delivery" ? this._monthFilter : this._reqDeliveryFilter;
+            var title      = filterType === "delivery" ? "Delivery Month" : "Req. Del Month";
+
+            var map        = this._buildWeekMonthMap(yr);
+            var w2m        = map.weekToMonth;   // {1:0, 2:0, ..., 52:11}
+            var m2w        = map.monthToWeeks;  // {0:[1,2,3,4], ..., 11:[...]}
+            var totalWeeks = Object.keys(w2m).length;
+
+            var curIsWeek  = curKey && curKey.charAt(0) === "W";
+            var curWeekNum = curIsWeek ? parseInt(curKey.substring(1), 10) : -1;
+            var curMonthIdx = (!curIsWeek && curKey !== "ALL" && curKey !== null) ? parseInt(curKey, 10) : -1;
+
+            var html = "";
+
+            /* ── Top bar (compact): title | ‹ year › | All | ✕ ── */
+            html += '<div class="mp-bar">';
+            html += '<span class="mp-title">' + title + '</span>';
+            html += '<button class="mp-nav-btn" onclick="window.__soApp._pickerPrevYear()">‹</button>';
+            html += '<span class="mp-year-label">' + yr + '</span>';
+            html += '<button class="mp-nav-btn" onclick="window.__soApp._pickerNextYear()">›</button>';
+            html += '<button class="mp-all-sm" onclick="window.__soApp._pickerSelectAll()">All</button>';
+            html += '<button class="mp-close-btn" onclick="window.__soApp._hideMonthPicker()">✕</button>';
+            html += '</div>';
+
+            /* ── Body: left = weeks (scrollable) | right = months grid ── */
+            html += '<div class="mp-body">';
+
+            /* Panel kiri: semua weeks W01–W52/53 (scrollable, clickable) */
+            html += '<div class="mp-weeks-col" id="__mpWeeksCol">';
+            for (var w = 1; w <= totalWeeks; w++) {
+                var wMonth  = w2m[w];
+                var isCurWk = (w === curWeekNum);
+                var cls = "mp-week-cell" + (isCurWk ? " mp-week-sel" : "");
+                var wLabel = "W" + String(w).padStart(2, "0");
+                html += '<div class="' + cls + '" data-w="' + w + '" data-m="' + wMonth + '"'
+                      + ' onmouseenter="window.__soApp._pickerHiWeek(' + w + ',true)"'
+                      + ' onmouseleave="window.__soApp._pickerHiWeek(' + w + ',false)"'
+                      + ' onclick="window.__soApp._pickerSelectWeek(' + w + ')">'
+                      + wLabel + '</div>';
+            }
+            html += '</div>';
+
+            /* Panel kanan: bulan 4 baris × 3 kolom */
+            html += '<div class="mp-months-grid">';
+            var monthRows = [[0,1,2],[3,4,5],[6,7,8],[9,10,11]];
+            monthRows.forEach(function (row) {
+                html += '<div class="mp-month-row">';
+                row.forEach(function (m) {
+                    var isSel  = (m === curMonthIdx);
+                    var mWeeks = (m2w[m] || []).join(",");
+                    var cls2   = "mp-month-cell" + (isSel ? " mp-month-sel" : "");
+                    html += '<div class="' + cls2 + '" data-m="' + m + '" data-weeks="' + mWeeks + '"'
+                          + ' onmouseenter="window.__soApp._pickerHiMonth(' + m + ',true)"'
+                          + ' onmouseleave="window.__soApp._pickerHiMonth(' + m + ',false)"'
+                          + ' onclick="window.__soApp._pickerSelectMonth(' + m + ')">'
+                          + that._MONTH_SHORT[m] + '</div>';
+                });
+                html += '</div>';
+            });
+            html += '</div>';
+            html += '</div>'; // .mp-body
+
+            popup.innerHTML = html;
+
+            /* Scroll weeks ke posisi yang relevan */
+            var col = document.getElementById("__mpWeeksCol");
+            if (col) {
+                var target = curIsWeek
+                    ? col.querySelector(".mp-week-sel")
+                    : col.querySelector("[data-m='" + (curMonthIdx >= 0 ? curMonthIdx : new Date().getMonth()) + "']");
+                if (!target) target = col.querySelector("[data-w='" + that._isoWeekNum(new Date()) + "']");
+                if (target) { col.scrollTop = target.offsetTop - col.clientHeight / 2 + target.offsetHeight / 2; }
+            }
+        },
+
+        /* Hover highlight: week → highlight matching months */
+        _pickerHiWeek: function (w, on) {
+            var popup = document.getElementById("__monthPickerPopup");
+            if (!popup) return;
+            var map = this._buildWeekMonthMap(this._pickerYear);
+            var m   = map.weekToMonth[w];
+            var el  = popup.querySelector(".mp-month-cell[data-m='" + m + "']");
+            if (el) el.classList.toggle("mp-hi", on);
+        },
+
+        /* Hover highlight: month → highlight matching weeks */
+        _pickerHiMonth: function (m, on) {
+            var popup = document.getElementById("__monthPickerPopup");
+            if (!popup) return;
+            popup.querySelectorAll(".mp-week-cell[data-m='" + m + "']").forEach(function (el) {
+                el.classList.toggle("mp-hi", on);
+            });
+        },
+
+        _pickerPrevYear: function () {
+            this._pickerYear = (this._pickerYear || new Date().getFullYear()) - 1;
+            this._renderPicker();
+        },
+        _pickerNextYear: function () {
+            this._pickerYear = (this._pickerYear || new Date().getFullYear()) + 1;
+            this._renderPicker();
+        },
+
+        _pickerSelectWeek: function (w) {
+            var key = "W" + w;
+            if (this._pickerFilterType === "delivery") {
+                this._monthFilter = key;
+                this._updatePickerBtnLabel("monthFilterBtn", key);
+            } else {
+                this._reqDeliveryFilter = key;
+                this._updatePickerBtnLabel("reqDeliveryFilterBtn", key);
+            }
+            this._hideMonthPicker();
             this._applyFilters();
             this._updateAgingAnalysis();
         },
 
-        onReqDeliveryFilterChange: function (oEvent) {
-            this._reqDeliveryFilter = oEvent.getSource().getSelectedKey();
+        _pickerSelectMonth: function (monthIndex) {
+            var key = String(monthIndex);
+            if (this._pickerFilterType === "delivery") {
+                this._monthFilter = key;
+                this._updatePickerBtnLabel("monthFilterBtn", key);
+            } else {
+                this._reqDeliveryFilter = key;
+                this._updatePickerBtnLabel("reqDeliveryFilterBtn", key);
+            }
+            this._hideMonthPicker();
             this._applyFilters();
             this._updateAgingAnalysis();
         },
+
+        _pickerSelectAll: function () {
+            if (this._pickerFilterType === "delivery") {
+                this._monthFilter = "ALL";
+                this._updatePickerBtnLabel("monthFilterBtn", "ALL");
+            } else {
+                this._reqDeliveryFilter = "ALL";
+                this._updatePickerBtnLabel("reqDeliveryFilterBtn", "ALL");
+            }
+            this._hideMonthPicker();
+            this._applyFilters();
+            this._updateAgingAnalysis();
+        },
+
+        _hideMonthPicker: function () {
+            var popup   = document.getElementById("__monthPickerPopup");
+            var overlay = document.getElementById("__monthPickerOverlay");
+            if (popup)   popup.remove();
+            if (overlay) overlay.remove();
+            this._pickerFilterType = null;
+        },
+
+        /* Lama — tidak dipakai lagi tapi dipertahankan agar tidak error jika dipanggil */
+        onMonthFilterChange: function () {},
+        onReqDeliveryFilterChange: function () {},
 
         _matchReqDeliveryFilter: function (deliveryDate) {
             var filter = this._reqDeliveryFilter;
             if (!filter || filter === "ALL") return true;
             if (!deliveryDate) return false;
             var dd = new Date(deliveryDate);
-            // filter key = "0" (Jan), "1" (Feb), ... "11" (Dec)
-            var filterMonth = parseInt(filter, 10);
-            return dd.getMonth() === filterMonth;
+            if (filter.charAt(0) === "W") {
+                return this._isoWeekNum(dd) === parseInt(filter.substring(1), 10);
+            }
+            return dd.getMonth() === parseInt(filter, 10);
         },
 
         _populateReqDeliveryFilter: function () {
-            var monthNames = ["January", "February", "March", "April", "May", "June",
-                              "July", "August", "September", "October", "November", "December"];
-            // Kumpulkan bulan unik dari delivery dates yang ada di data
-            var monthSet = new Set();
-            this._allData.forEach(function (r) {
-                if (r.deliveryDate) {
-                    monthSet.add(r.deliveryDate.getMonth());
-                }
-            });
-            var months = Array.from(monthSet).sort(function (a, b) { return a - b; });
-
-            var sel = this.byId("reqDeliveryFilter");
-            if (!sel) return;
-            sel.removeAllItems();
-            sel.addItem(new sap.ui.core.Item({ key: "ALL", text: "All" }));
-            months.forEach(function (m) {
-                sel.addItem(new sap.ui.core.Item({ key: String(m), text: monthNames[m] }));
-            });
-            this._reqDeliveryFilter = "ALL";
-            sel.setSelectedKey("ALL");
+            // Tidak dipakai — filter kini menggunakan custom month picker popup
         },
 
         _matchMonthFilter: function (deliveryDate, monthKey) {
             if (!monthKey || monthKey === "ALL") return true;
-            // Filter berdasarkan bulan order dibuat (kumulatif s/d bulan terpilih)
+            if (!deliveryDate) return true;   // jika tidak ada tanggal, ikutkan saja
+            var dd = new Date(deliveryDate);
+
+            if (monthKey.charAt(0) === "W") {
+                // Kumulatif s/d akhir week terpilih (Sunday ISO week)
+                var wNum = parseInt(monthKey.substring(1), 10);
+                var yr   = this._pickerYear || new Date().getFullYear();
+                // Cari Monday of W01: Jan 4 selalu di W01
+                var jan4 = new Date(yr, 0, 4);
+                var dow  = jan4.getDay() || 7;
+                var w1Mon = new Date(jan4);
+                w1Mon.setDate(jan4.getDate() - dow + 1);
+                // Monday of wNum
+                var wMon = new Date(w1Mon);
+                wMon.setDate(w1Mon.getDate() + (wNum - 1) * 7);
+                // Sunday (akhir week) = Monday + 6
+                var wSun = new Date(wMon);
+                wSun.setDate(wMon.getDate() + 6);
+                wSun.setHours(23, 59, 59, 999);
+                return dd <= wSun;
+            }
+
+            // Kumulatif s/d akhir bulan terpilih
             var selectedMonth = parseInt(monthKey, 10);
-            var currentYear = new Date().getFullYear();
-            var endDate = new Date(currentYear, selectedMonth + 1, 0, 23, 59, 59);
-            if (!deliveryDate) return true;
-            return deliveryDate <= endDate;
+            var yr2 = this._pickerYear || new Date().getFullYear();
+            var endDate = new Date(yr2, selectedMonth + 1, 0, 23, 59, 59, 999);
+            return dd <= endDate;
         },
 
         _populateMonthFilter: function () {
-            var monthNames = ["January", "February", "March", "April", "May", "June",
-                              "July", "August", "September", "October", "November", "December"];
-
-            var sel = this.byId("monthFilter");
-            if (!sel) return;
-            sel.removeAllItems();
-            sel.addItem(new sap.ui.core.Item({ key: "ALL", text: "All" }));
-            for (var i = 0; i < 12; i++) {
-                sel.addItem(new sap.ui.core.Item({ key: String(i), text: monthNames[i] }));
-            }
-            this._monthFilter = "ALL";
-            sel.setSelectedKey("ALL");
+            // Tidak dipakai — filter kini menggunakan custom month picker popup
         },
 
         _applyFilters: function () {
