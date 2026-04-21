@@ -197,17 +197,18 @@ sap.ui.define([
          *   contains WOOD + METAL → "W & M"
          *   contains WOOD only    → "Wood"
          *   contains METAL only   → "Metal"
-         *   otherwise             → "" (uncategorised)
+         *   non-empty, no match   → "Other"  (e.g. " &")
+         *   empty / null          → ""
          */
         _resolveType: function (typeStr) {
-            if (!typeStr) return "";
+            if (!typeStr || !typeStr.trim()) return "";
             var t        = typeStr.toUpperCase();
             var hasWood  = t.indexOf("WOOD")  !== -1;
             var hasMetal = t.indexOf("METAL") !== -1;
             if (hasWood && hasMetal) return "W & M";
             if (hasWood)             return "Wood";
             if (hasMetal)            return "Metal";
-            return "";
+            return "Other";
         },
 
         /** Dipanggil oleh chip button di Aging Analysis type filter */
@@ -562,8 +563,8 @@ sap.ui.define([
             });
 
             // ── Type filter chips — dirender ke agingTypeFilterBar (di LUAR ScrollContainer) ──
-            var typeKeys   = ["ALL", "Metal", "Wood", "W & M"];
-            var typeLabels = { "ALL": "All", "Metal": "Metal", "Wood": "Wood", "W & M": "W&M" };
+            var typeKeys   = ["ALL", "Metal", "Wood", "W & M", "Other"];
+            var typeLabels = { "ALL": "All", "Metal": "Metal", "Wood": "Wood", "W & M": "W&M", "Other": "Other" };
             var chips = typeKeys.map(function (k) {
                 var isActive = agingTypeFilter === k;
                 var baseStyle = 'display:inline-flex;align-items:center;height:22px;padding:0 9px;'
@@ -1499,6 +1500,48 @@ sap.ui.define([
                 doc.text("Total SO: " + totalSO, 80, 24);
                 doc.text("Total Qty: " + Math.floor(totalQty).toLocaleString("en-US"), 140, 24);
 
+                // ── Filter info row ────────────────────────────────────────────
+                var filterParts = [];
+
+                var typeFilter = that._agingTypeFilter || "ALL";
+                if (typeFilter !== "ALL") {
+                    filterParts.push("Type: " + typeFilter);
+                }
+                var statusF = that._statusFilter || "ALL";
+                if (statusF !== "ALL") {
+                    filterParts.push("Status: " + statusF);
+                }
+                var monthF = that._monthFilter || "ALL";
+                if (monthF !== "ALL") {
+                    var delLabel = monthF.charAt(0) === "W"
+                        ? monthF
+                        : (that._MONTH_SHORT ? that._MONTH_SHORT[parseInt(monthF, 10)] : monthF);
+                    filterParts.push("Delivery: " + delLabel);
+                }
+                var reqF = that._reqDeliveryFilter || "ALL";
+                if (reqF !== "ALL") {
+                    var reqLabel = reqF.charAt(0) === "W"
+                        ? reqF
+                        : (that._MONTH_SHORT ? that._MONTH_SHORT[parseInt(reqF, 10)] : reqF);
+                    filterParts.push("Req. Del: " + reqLabel);
+                }
+                if (that._searchQuery && that._searchQuery.trim()) {
+                    filterParts.push('Search: "' + that._searchQuery.trim() + '"');
+                }
+
+                var tableStartY = 32;
+                if (filterParts.length > 0) {
+                    var filterLine = "Active Filters:  " + filterParts.join("   |   ");
+                    // Light amber background strip
+                    doc.setFillColor(255, 248, 230);
+                    doc.rect(0, 28, 297, 7, "F");
+                    doc.setFontSize(7.5);
+                    doc.setFont("helvetica", "bold");
+                    doc.setTextColor(154, 52, 18);   // dark orange
+                    doc.text(filterLine, 14, 33);
+                    tableStartY = 37;
+                }
+
                 doc.setTextColor(0, 0, 0);
                 doc.setFontSize(8);
                 doc.setFont("helvetica", "normal");
@@ -1527,7 +1570,7 @@ sap.ui.define([
                 });
 
                 doc.autoTable({
-                    startY: 32,
+                    startY: tableStartY,
                     head: [[
                         "No", "Sales Order", "Created Date", "Material", "Qty Order", "Shipped", "Ots. SO",
                         "Ots. DO", "WHFG", "Packing", "Total Value", "Req. Delivery", "Days Running", "Status"
