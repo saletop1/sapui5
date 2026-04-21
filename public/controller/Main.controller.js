@@ -34,6 +34,7 @@ sap.ui.define([
             this._monthFilter     = "ALL";
             this._reqDeliveryFilter = "ALL";
             this._expandedCustomers = {};
+            this._agingTypeFilter = "ALL";
             this._updating        = false;
             this._currentPage     = 1;
             this._pageSize        = 50;
@@ -104,6 +105,7 @@ sap.ui.define([
             this._statusFilter  = "ALL";
             this._monthFilter   = "ALL";
             this._reqDeliveryFilter = "ALL";
+            this._agingTypeFilter   = "ALL";
             this._expandedCustomers = {};
 
             this._resetFilterControls();
@@ -145,12 +147,74 @@ sap.ui.define([
             return "$" + num.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         },
 
+        /**
+         * Clipboard copy — dipanggil dari onclick di formatter HTML.
+         * Fallback ke execCommand jika Clipboard API tidak tersedia.
+         */
+        _copyText: function (text, el) {
+            var doFlash = function (ok) {
+                if (!el) return;
+                var orig = el.style.background;
+                el.style.background = ok ? "#d1fae5" : "#fee2e2";
+                el.style.transition = "background 0.3s";
+                setTimeout(function () {
+                    el.style.background = orig;
+                    el.style.transition  = "";
+                }, 700);
+            };
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(
+                    function () { doFlash(true); },
+                    function () { doFlash(false); }
+                );
+            } else {
+                // Fallback: buat textarea sementara
+                var ta = document.createElement("textarea");
+                ta.value = text;
+                ta.style.cssText = "position:fixed;top:-9999px;left:-9999px;opacity:0;";
+                document.body.appendChild(ta);
+                ta.select();
+                try {
+                    document.execCommand("copy");
+                    doFlash(true);
+                } catch (e) {
+                    doFlash(false);
+                }
+                document.body.removeChild(ta);
+            }
+        },
+
         _fmtPct: function (v) {
             var num = Number(v || 0);
             if (isNaN(num)) num = 0;
             // Bulatkan max 2 desimal, hilangkan trailing zero: 100 → "100%", 34.56 → "34.56%", 34.5 → "34.5%"
             var rounded = parseFloat(num.toFixed(2));
             return rounded + "%";
+        },
+
+        /**
+         * Resolve API "type" string ke kategori tampilan.
+         *   contains WOOD + METAL → "W & M"
+         *   contains WOOD only    → "Wood"
+         *   contains METAL only   → "Metal"
+         *   otherwise             → "" (uncategorised)
+         */
+        _resolveType: function (typeStr) {
+            if (!typeStr) return "";
+            var t        = typeStr.toUpperCase();
+            var hasWood  = t.indexOf("WOOD")  !== -1;
+            var hasMetal = t.indexOf("METAL") !== -1;
+            if (hasWood && hasMetal) return "W & M";
+            if (hasWood)             return "Wood";
+            if (hasMetal)            return "Metal";
+            return "";
+        },
+
+        /** Dipanggil oleh chip button di Aging Analysis type filter */
+        onAgingTypeChange: function (val) {
+            this._agingTypeFilter = val;
+            this._applyFilters();
+            this._updateAgingAnalysis();
         },
 
         _intFmt: function (v) {
@@ -257,6 +321,7 @@ sap.ui.define([
                             customer:        x.name1 || x.kunnr || "-",
                             kunnr:           x.kunnr || "",
                             matnr:           matnr,
+                            type:            x.type || "",
                             item:            x.maktx || x.matnr || "-",
                             quantity:        qtyBalance,
                             kwmeng:          kwmeng,
@@ -423,6 +488,7 @@ sap.ui.define([
             var kunnr = this._selectedKunnr;
             var statusFilter = this._statusFilter;
             var monthFilter = this._monthFilter;
+            var agingTypeFilter = this._agingTypeFilter || "ALL";
             var filtered = data.filter(function (r) {
                 var matchCust = !kunnr || r.kunnr === kunnr;
                 var matchSearch = !q
@@ -434,7 +500,8 @@ sap.ui.define([
                 var matchStatus = !statusFilter || statusFilter === "ALL" || r.status === statusFilter;
                 var matchMonth = that._matchMonthFilter(r.deliveryDate, monthFilter);
                 var matchReqDel = that._matchReqDeliveryFilter(r.deliveryDate);
-                return matchCust && matchSearch && matchStatus && matchMonth && matchReqDel;
+                var matchType  = agingTypeFilter === "ALL" || that._resolveType(r.type) === agingTypeFilter;
+                return matchCust && matchSearch && matchStatus && matchMonth && matchReqDel && matchType;
             });
 
             var categories = [
@@ -494,7 +561,39 @@ sap.ui.define([
                 }
             });
 
-            // Summary header (sticky)
+            // ── Type filter chips — dirender ke agingTypeFilterBar (di LUAR ScrollContainer) ──
+            var typeKeys   = ["ALL", "Metal", "Wood", "W & M"];
+            var typeLabels = { "ALL": "All", "Metal": "Metal", "Wood": "Wood", "W & M": "W&M" };
+            var chips = typeKeys.map(function (k) {
+                var isActive = agingTypeFilter === k;
+                var baseStyle = 'display:inline-flex;align-items:center;height:22px;padding:0 9px;'
+                              + 'border-radius:11px;font-size:10px;font-weight:' + (isActive ? '700' : '500') + ';'
+                              + 'cursor:pointer;white-space:nowrap;border:1px solid;'
+                              + 'transition:all 0.15s;font-family:inherit;outline:none;';
+                var colorStyle = isActive
+                    ? 'background:#16a34a;color:#fff;border-color:#16a34a;'
+                    : 'background:transparent;color:var(--text-muted,#6b7280);border-color:var(--border-medium,#c0c4cc);';
+                return '<button onclick="window.__soApp.onAgingTypeChange(\'' + k + '\')" '
+                     + 'style="' + baseStyle + colorStyle + '">'
+                     + typeLabels[k] + '</button>';
+            }).join("");
+
+            var fbHtml = '<div style="display:flex;align-items:center;gap:5px;'
+                       + 'padding:5px 10px;border-bottom:1px solid var(--border-light,rgba(0,0,0,0.08));'
+                       + 'background:var(--bg-glass-solid,#fff);">'
+                       + '<span style="font-size:10px;font-weight:600;color:var(--text-muted,#6b7280);'
+                       + 'white-space:nowrap;margin-right:2px;">Type:</span>'
+                       + chips
+                       + '</div>';
+
+            var filterBarEl = this.byId("agingTypeFilterBar");
+            if (filterBarEl) {
+                filterBarEl.setProperty("content", fbHtml, true);
+                var fbDom = filterBarEl.getDomRef();
+                if (fbDom) fbDom.innerHTML = fbHtml;
+            }
+
+            // Summary header
             var html = '<div class="agingSummary">';
             html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">';
             html += '<span style="font-weight:700;font-size:13px;color:#166534;">Total: ' + that._usdNoDecimal(grandTotal) + '</span>';
@@ -748,15 +847,24 @@ sap.ui.define([
 
         formatSalesOrderWithBstnk: function (bstnk, soId, showCustomerBelow, customerName) {
             var safeBstnk = (bstnk && bstnk !== "") ? bstnk.replace(/</g, "&lt;").replace(/>/g, "&gt;") : "";
-            var safeSo = (soId || "-").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-            var html = '<div style="display:flex;flex-direction:column;">';
+            var rawBstnk  = (bstnk  || "").replace(/\\/g, "\\\\").replace(/'/g, "\\'");
+            var safeSo    = (soId   || "-").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+            var rawSo     = (soId   || "-").replace(/\\/g, "\\\\").replace(/'/g, "\\'");
+
+            var copyStyle = 'cursor:copy;border-radius:3px;padding:1px 2px;margin:-1px -2px;'
+                          + 'transition:background 0.3s;';
+            var html = '<div style="display:flex;flex-direction:column;line-height:1.4;">';
             if (safeBstnk) {
-                html += '<span style="font-size:10px; color:#6c757d;">' + safeBstnk + '</span>';
+                html += '<span onclick="event.stopPropagation();window.__soApp._copyText(\'' + rawBstnk + '\',this)" '
+                      + 'title="Click to copy" '
+                      + 'style="font-size:10px;color:#6c757d;' + copyStyle + '">' + safeBstnk + '</span>';
             }
-            html += '<span style="font-weight:600;">' + safeSo + '</span>';
+            html += '<span onclick="event.stopPropagation();window.__soApp._copyText(\'' + rawSo + '\',this)" '
+                  + 'title="Click to copy" '
+                  + 'style="font-weight:600;' + copyStyle + '">' + safeSo + '</span>';
             if (showCustomerBelow) {
                 var safeCust = (customerName || "-").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-                html += '<span style="font-size:10px; color:#6c757d;">' + safeCust + '</span>';
+                html += '<span style="font-size:10px;color:#6c757d;">' + safeCust + '</span>';
             }
             html += '</div>';
             return html;
@@ -1099,8 +1207,9 @@ sap.ui.define([
         _applyFilters: function () {
             var q     = this._searchQuery;
             var kunnr = this._selectedKunnr;
-            var statusFilter = this._statusFilter;
-            var monthFilter = this._monthFilter;
+            var statusFilter    = this._statusFilter;
+            var monthFilter     = this._monthFilter;
+            var agingTypeFilter = this._agingTypeFilter || "ALL";
             var that = this;
 
             var filtered = this._allData.filter(function (r) {
@@ -1112,9 +1221,10 @@ sap.ui.define([
                     || r.matnr.toLowerCase().includes(q)
                     || (r.bstnk && r.bstnk.toLowerCase().includes(q));
                 var matchStatus = !statusFilter || statusFilter === "ALL" || r.status === statusFilter;
-                var matchMonth = that._matchMonthFilter(r.deliveryDate, monthFilter);
+                var matchMonth  = that._matchMonthFilter(r.deliveryDate, monthFilter);
                 var matchReqDel = that._matchReqDeliveryFilter(r.deliveryDate);
-                return matchCust && matchSearch && matchStatus && matchMonth && matchReqDel;
+                var matchType   = agingTypeFilter === "ALL" || that._resolveType(r.type) === agingTypeFilter;
+                return matchCust && matchSearch && matchStatus && matchMonth && matchReqDel && matchType;
             });
 
             filtered.sort(function(a, b) {
@@ -1461,11 +1571,16 @@ sap.ui.define([
         },
 
         formatMaterial: function (matnr, maktx) {
-            var code = (matnr || "-").replace(/</g, "&lt;");
-            var desc = (maktx || "-").replace(/</g, "&lt;");
-            return '<div style="display:flex;flex-direction:column;line-height:1.35">'
-                 + '<span class="materialCode">' + code + '</span>'
-                 + '<span class="materialDesc">' + desc + '</span>'
+            var safeCode = (matnr || "-").replace(/</g, "&lt;");
+            var rawCode  = (matnr || "-").replace(/\\/g, "\\\\").replace(/'/g, "\\'");
+            var safeDesc = (maktx || "-").replace(/</g, "&lt;");
+
+            var copyStyle = 'cursor:copy;border-radius:3px;padding:1px 2px;margin:-1px -2px;'
+                          + 'transition:background 0.3s;';
+            return '<div style="display:flex;flex-direction:column;line-height:1.35;">'
+                 + '<span class="materialCode" onclick="event.stopPropagation();window.__soApp._copyText(\'' + rawCode + '\',this)" '
+                 +   'title="Click to copy" style="' + copyStyle + '">' + safeCode + '</span>'
+                 + '<span class="materialDesc">' + safeDesc + '</span>'
                  + '</div>';
         },
 

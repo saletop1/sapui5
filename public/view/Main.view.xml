@@ -52,7 +52,8 @@
                                     <Text text="Stacked by Days Running" class="sapUiTinyMarginEnd agingSubtitle"/>
                                 </Toolbar>
                             </headerToolbar>
-                            <ScrollContainer height="320px" vertical="true" horizontal="false" width="100%">
+                            <core:HTML id="agingTypeFilterBar" content="&lt;div&gt;&lt;/div&gt;"/>
+                            <ScrollContainer height="288px" vertical="true" horizontal="false" width="100%">
                                 <core:HTML id="agingAnalysisHtml" content="&lt;div&gt;Loading...&lt;/div&gt;"/>
                             </ScrollContainer>
                         </Panel>
