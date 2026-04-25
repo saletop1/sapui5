@@ -1244,6 +1244,7 @@ sap.ui.define([
             this._currentPage = 1;
             this.getView().getModel().setProperty("/results", filtered);
             this._renderPage();
+            this._scrollSOTableToTop();
         },
 
         _renderPage: function () {
@@ -1301,10 +1302,23 @@ sap.ui.define([
             if (page > totalPages) page = totalPages;
             this._currentPage = page;
             this._renderPage();
+            this._scrollSOTableToTop();
+        },
 
-            // Scroll ke atas tabel
-            var scrollEl = document.getElementById("soScrollContainer");
-            if (scrollEl) scrollEl.scrollTop = 0;
+        /** Reset scroll posisi SO detail table ke atas */
+        _scrollSOTableToTop: function () {
+            var that = this;
+            window.requestAnimationFrame(function () {
+                var ctrl = that.byId("soScrollContainer");
+                var dom  = ctrl && ctrl.getDomRef ? ctrl.getDomRef() : null;
+                if (dom) {
+                    dom.scrollTop = 0;
+                } else {
+                    // fallback: cari via class jika byId belum render
+                    var el = document.querySelector(".soScrollContainer");
+                    if (el) el.scrollTop = 0;
+                }
+            });
         },
 
         _getActiveData: function () {
